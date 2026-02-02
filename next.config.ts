@@ -1,15 +1,11 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
   typescript: {
-    // !! ATTENTION !!
-    // Cela permet de déployer même s'il y a des erreurs TypeScript.
-    // Très utile pour un prototype rapide !
+    // On force le passage même s'il y a des petits soucis de types
     ignoreBuildErrors: true,
   },
-  eslint: {
-    // On ignore aussi les avertissements de style
-    ignoreDuringBuilds: true,
-  },
+  // On retire la partie eslint qui faisait râler Vercel
 };
 
 export default nextConfig;
