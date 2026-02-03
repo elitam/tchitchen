@@ -36,14 +36,26 @@ export default function Home() {
   }, [])
 
   const toggleStatus = async (id: string, currentStatus: string) => {
-    const statusOrder = ['pending', 'in_progress', 'completed']
-    const nextStatus = statusOrder[(statusOrder.indexOf(currentStatus) + 1) % statusOrder.length]
+  const statusOrder = ['pending', 'in_progress', 'completed']
+  const nextStatus = statusOrder[(statusOrder.indexOf(currentStatus) + 1) % statusOrder.length]
 
-    await supabase.from('tasks').update({ status: nextStatus }).eq('id', id)
-    
-    const updatedTasks = tasks.map(t => t.id === id ? { ...t, status: nextStatus } : t)
-    setTasks(sortTasks(updatedTasks))
+  // 1. MISE À JOUR OPTIMISTE (Immédiate sur l'écran)
+  const updatedTasks = tasks.map(t => t.id === id ? { ...t, status: nextStatus } : t)
+  setTasks(sortTasks(updatedTasks))
+
+  // 2. ENVOI DISCRET À SUPABASE (En arrière-plan)
+  const { error } = await supabase
+    .from('tasks')
+    .update({ status: nextStatus })
+    .eq('id', id)
+
+  if (error) {
+    // Si vraiment ça échoue, on recharge les vraies données
+    console.error("Erreur serveur, synchronisation...", error)
+    const { data } = await supabase.from('tasks').select('*')
+    setTasks(sortTasks(data || []))
   }
+}
 
   const addTask = async (e: React.FormEvent) => {
     e.preventDefault()
