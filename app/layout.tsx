@@ -25,15 +25,14 @@ export const metadata: Metadata = {
   },
 };
 
-
-
 export const viewport: Viewport = {
   themeColor: "#000000",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  viewportFit: "cover", // TRÈS IMPORTANT : ça dit à l'appli d'occuper TOUT l'écran
 };
+
+
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

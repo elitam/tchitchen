@@ -62,9 +62,9 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-black text-white p-6 pb-32 font-sans overflow-hidden">
+    <main className="min-h-screen bg-black text-white p-6 pt-[calc(env(safe-area-inset-top)+24px)] pb-32 font-sans">
       <div className="flex justify-between items-center mb-10">
-        <h1 className="text-4xl font-black tracking-tighter italic">Tchitchen</h1>
+        <h1 className="text-4xl font-black tracking-tighter italic">Thitchen</h1>
         <div className="w-10 h-10 bg-zinc-800 rounded-full flex items-center justify-center border border-zinc-700">
            <span className="text-xs font-bold text-zinc-400">EL</span>
         </div>
