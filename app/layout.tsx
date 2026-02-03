@@ -16,6 +16,10 @@ export const metadata: Metadata = {
   title: "Tchitchen",
   description: "L'appli de la Tchatche",
   manifest: "/manifest.json", // <--- AJOUTE CETTE LIGNE
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Tchitchen",}
 };
 
 
