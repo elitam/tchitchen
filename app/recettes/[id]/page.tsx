@@ -90,55 +90,49 @@ export default function FicheRecette() {
       <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em]">{recipe.station || 'GENERAL'}</p>
     </div>
   </div>
-
-      <div className="p-8 space-y-12">
-        {/* SECTION 1 : RENDEMENT (Le gros chiffre bleu) */}
-        <div className="flex flex-col items-center space-y-4">
-          <div className="flex items-baseline gap-2">
-            <span className="text-5xl font-black text-blue-500 tracking-tighter">
-              {yieldInput.toFixed(recipe.unit === 'portion' ? 0 : 1)}
-            </span>
-            <span className="text-xl font-black text-blue-500/50 uppercase">{recipe.unit}</span>
-          </div>
-          <input 
-            type="range" min={minYield} max={maxYield} 
-            step={recipe.unit === 'portion' ? 1 : 0.1}
-            value={yieldInput}
-            onChange={(e) => setYieldInput(Number(e.target.value))}
-            className="w-full"
-          />
-        </div>
-
-        {/* SECTION 2 : INGRÉDIENTS (Style Carte Menu) */}
-        <div className="space-y-6">
-          <h2 className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.3em]">Mise en place</h2>
-          <div className="space-y-4">
-            {recipe.ingredients?.map((ing: any, index: number) => (
-              <div key={index} className="flex items-end text-lg">
-                <span className="text-zinc-400 font-bold">{ing.item}</span>
-                <div className="dotted-line" />
-                <span className="text-blue-500 font-mono font-bold">
-                  {((ing.qty / recipe.base_yield) * yieldInput).toFixed(recipe.unit === 'portion' ? 0 : 2)}
-                  <span className="ml-1 text-sm text-blue-500/50">{ing.unit}</span>
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* SECTION 3 : PROCÉDÉ */}
-        <div className="space-y-6 pb-20">
-          <h2 className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.3em]">Procédé</h2>
-          <div className="space-y-6">
-            {recipe.instructions ? recipe.instructions.split('\n').filter((l:any)=>l.trim()).map((step: string, i: number) => (
-              <div key={i} className="flex gap-4 items-start">
-                <span className="text-zinc-800 font-black italic text-xl leading-none">{i + 1}.</span>
-                <p className="text-zinc-400 leading-relaxed text-[17px]">{step}</p>
-              </div>
-            )) : <p className="text-zinc-800 italic">Pas d'instructions...</p>}
-          </div>
-        </div>
+<div className="p-8 space-y-12">
+  
+  {/* ON AFFICHE LE CALCULATEUR UNIQUEMENT POUR LA PRODUCTION */}
+  {recipe.category === 'production' && (
+    <div className="flex flex-col items-center space-y-4">
+      <div className="flex items-baseline gap-2">
+        <span className="text-5xl font-black text-blue-500 tracking-tighter">
+          {yieldInput.toFixed(recipe.unit === 'portion' ? 0 : 1)}
+        </span>
+        <span className="text-xl font-black text-blue-500/50 uppercase">{recipe.unit}</span>
       </div>
+      <input type="range" min={minYield} max={maxYield} step={recipe.unit === 'portion' ? 1 : 0.1}
+        value={yieldInput} onChange={(e) => setYieldInput(Number(e.target.value))}
+        className="w-full"
+      />
+    </div>
+  )}
+
+  {/* ON AFFICHE LA MISE EN PLACE UNIQUEMENT POUR LA PRODUCTION */}
+  {recipe.category === 'production' && (
+    <div className="space-y-6">
+      <h2 className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.3em]">Mise en place</h2>
+      {/* ... (ton code de liste d'ingrédients avec pointillés) */}
+    </div>
+  )}
+
+  {/* PROCÉDÉ (PRODUCTION) OU COMPOSANTS (PASS) */}
+  <div className="space-y-6 pb-20">
+    <h2 className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.3em]">
+      {recipe.category === 'plating' ? 'Composants & Dressage' : 'Procédé'}
+    </h2>
+    <div className="space-y-6">
+      {recipe.instructions ? recipe.instructions.split('\n').filter((l:any)=>l.trim()).map((step: string, i: number) => (
+        <div key={i} className="flex gap-4 items-start">
+          <span className="text-zinc-800 font-black italic text-xl leading-none">{i + 1}.</span>
+          <p className="text-zinc-400 leading-relaxed text-[17px]">{step}</p>
+        </div>
+      )) : <p className="text-zinc-800 italic">Pas d'informations...</p>}
+    </div>
+  </div>
+</div>
+      
+      
     </main>
   )
 }

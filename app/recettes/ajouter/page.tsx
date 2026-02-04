@@ -96,93 +96,56 @@ export default function AjouterRecette() {
           </label>
         </div>
 
-        {/* CONFIGURATION (Dropdowns larges) */}
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 gap-6">
-             <div>
-              <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest block mb-2">Type de fiche</label>
-              <select 
-                value={category} onChange={(e:any) => setCategory(e.target.value)}
-                className="w-full bg-zinc-900 p-4 rounded-2xl border border-zinc-800 outline-none text-sm font-bold appearance-none"
-              >
-                <option value="production">📦 PRODUCTION</option>
-                <option value="plating">🍽️ LE PASS / DRESSAGE</option>
-              </select>
-            </div>
-            <div>
-              <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest block mb-2">Station de travail</label>
-              <input 
-                type="text" placeholder="Ex: GARDE MANGER" 
-                value={station} onChange={(e) => setStation(e.target.value)}
-                className="w-full bg-zinc-900 p-4 rounded-2xl border border-zinc-800 outline-none text-sm font-bold uppercase"
-              />
-            </div>
-          </div>
+        {/* CONFIGURATION - Champs dynamiques */}
+<div className="space-y-6">
+  <select value={category} onChange={(e:any) => setCategory(e.target.value)}
+    className="w-full bg-zinc-900 p-4 rounded-2xl border border-zinc-800 outline-none text-sm font-bold appearance-none"
+  >
+    <option value="production">📦 PRODUCTION</option>
+    <option value="plating">🍽️ LE PASS / DRESSAGE</option>
+  </select>
+  
+  <input type="text" placeholder="STATION" value={station} onChange={(e) => setStation(e.target.value)}
+    className="w-full bg-zinc-900 p-4 rounded-2xl border border-zinc-800 outline-none text-sm font-bold uppercase"
+  />
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest block mb-2">Rendement base</label>
-              <input 
-                type="number" step="0.1" value={baseYield} 
-                onFocus={(e) => e.target.select()}
-                onChange={(e) => setBaseYield(Number(e.target.value))}
-                className="w-full bg-zinc-900 p-4 rounded-2xl border border-zinc-800 outline-none text-xl font-black text-blue-500"
-              />
-            </div>
-            <div>
-              <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest block mb-2">Unité</label>
-              <input 
-                type="text" placeholder="kg, L..." 
-                value={unit} onChange={(e) => setUnit(e.target.value)}
-                className="w-full bg-zinc-900 p-4 rounded-2xl border border-zinc-800 outline-none text-xl font-black uppercase"
-              />
-            </div>
-          </div>
-        </div>
+  {/* ON CACHE SI C'EST LE PASS */}
+  {category === 'production' && (
+    <div className="grid grid-cols-2 gap-4">
+      <div>
+        <label className="text-[10px] font-black text-zinc-600 uppercase mb-2 block">Rendement base</label>
+        <input type="number" step="0.1" value={baseYield} onFocus={(e) => e.target.select()} onChange={(e) => setBaseYield(Number(e.target.value))}
+          className="w-full bg-zinc-900 p-4 rounded-2xl border border-zinc-800 outline-none text-xl font-black text-blue-500"
+        />
+      </div>
+      <div>
+        <label className="text-[10px] font-black text-zinc-600 uppercase mb-2 block">Unité</label>
+        <input type="text" placeholder="kg, L..." value={unit} onChange={(e) => setUnit(e.target.value)}
+          className="w-full bg-zinc-900 p-4 rounded-2xl border border-zinc-800 outline-none text-xl font-black uppercase"
+        />
+      </div>
+    </div>
+  )}
+</div>
 
-        {/* INGRÉDIENTS (Grille fixe) */}
-        <div className="space-y-4">
-          <h2 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.3em]">Mise en place</h2>
-          <div className="space-y-3">
-            {ingredients.map((ing, index) => (
-              <div key={index} className="grid grid-cols-[1fr_75px_65px_30px] gap-2 items-center">
-                <input 
-                  type="text" placeholder="Item" value={ing.item}
-                  onChange={(e) => updateIngredient(index, 'item', e.target.value)}
-                  className="bg-zinc-900 p-3 rounded-xl border border-zinc-800 outline-none text-sm font-bold"
-                />
-                <input 
-                  type="number" step="0.1" value={ing.qty}
-                  onFocus={(e) => e.target.select()}
-                  onChange={(e) => updateIngredient(index, 'qty', Number(e.target.value))}
-                  className="bg-zinc-900 p-3 rounded-xl border border-zinc-800 outline-none text-sm text-center text-blue-400 font-bold"
-                />
-                <input 
-                  type="text" placeholder="Unité" value={ing.unit}
-                  onChange={(e) => updateIngredient(index, 'unit', e.target.value)}
-                  className="bg-zinc-900 p-3 rounded-xl border border-zinc-800 outline-none text-sm text-center font-bold lowercase"
-                />
-                <button type="button" onClick={() => setIngredients(ingredients.filter((_, i) => i !== index))} className="text-zinc-800">✕</button>
-              </div>
-            ))}
-          </div>
-          <button 
-            type="button" onClick={() => setIngredients([...ingredients, { item: '', qty: 0, unit: 'g' }])}
-            className="w-full py-4 border border-zinc-800 rounded-2xl text-zinc-600 text-[10px] font-black uppercase tracking-widest"
-          >
-            + Ajouter
-          </button>
-        </div>
+{/* INGRÉDIENTS - CACHÉ SI C'EST LE PASS */}
+{category === 'production' && (
+  <div className="space-y-4">
+    <h2 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.3em]">Mise en place</h2>
+    {/* ... (ton code de liste d'ingrédients existant) */}
+  </div>
+)}
 
-        {/* PROCÉDÉ */}
-        <div className="space-y-4">
-          <label className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.3em] block">Procédé de fabrication</label>
-          <textarea 
-            rows={6} placeholder="Étapes..." 
-            value={instructions} onChange={(e) => setInstructions(e.target.value)}
-            className="w-full bg-zinc-900 p-5 rounded-[2rem] border border-zinc-800 outline-none text-md leading-relaxed"
-          />
-        </div>
+{/* PROCÉDÉ / COMPOSANTS - Texte libre */}
+<div className="space-y-4">
+  <label className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.3em] block">
+    {category === 'plating' ? 'Composants du dressage' : 'Procédé de fabrication'}
+  </label>
+  <textarea rows={6} placeholder={category === 'plating' ? 'Ex: 1. Purée de céleri, 2. Jus corsé...' : 'Étapes...'} 
+    value={instructions} onChange={(e) => setInstructions(e.target.value)}
+    className="w-full bg-zinc-900 p-5 rounded-[2rem] border border-zinc-800 outline-none text-md leading-relaxed"
+  />
+</div>
 
         <button 
           disabled={loading}
