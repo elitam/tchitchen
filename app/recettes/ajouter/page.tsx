@@ -132,7 +132,35 @@ export default function AjouterRecette() {
 {category === 'production' && (
   <div className="space-y-4">
     <h2 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.3em]">Mise en place</h2>
-    {/* ... (ton code de liste d'ingrédients existant) */}
+    <div className="space-y-3">
+            {ingredients.map((ing, index) => (
+              <div key={index} className="grid grid-cols-[1fr_75px_65px_30px] gap-2 items-center">
+                <input 
+                  type="text" placeholder="Item" value={ing.item}
+                  onChange={(e) => updateIngredient(index, 'item', e.target.value)}
+                  className="bg-zinc-900 p-3 rounded-xl border border-zinc-800 outline-none text-sm font-bold"
+                />
+                <input 
+                  type="number" step="0.1" value={ing.qty}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) => updateIngredient(index, 'qty', Number(e.target.value))}
+                  className="bg-zinc-900 p-3 rounded-xl border border-zinc-800 outline-none text-sm text-center text-blue-400 font-bold"
+                />
+                <input 
+                  type="text" placeholder="Unité" value={ing.unit}
+                  onChange={(e) => updateIngredient(index, 'unit', e.target.value)}
+                  className="bg-zinc-900 p-3 rounded-xl border border-zinc-800 outline-none text-sm text-center font-bold lowercase"
+                />
+                <button type="button" onClick={() => setIngredients(ingredients.filter((_, i) => i !== index))} className="text-zinc-800">✕</button>
+              </div>
+            ))}
+          </div>
+          <button 
+            type="button" onClick={() => setIngredients([...ingredients, { item: '', qty: 0, unit: 'g' }])}
+            className="w-full py-4 border border-zinc-800 rounded-2xl text-zinc-600 text-[10px] font-black uppercase tracking-widest"
+          >
+            + Ajouter
+          </button>
   </div>
 )}
 
