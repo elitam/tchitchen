@@ -34,20 +34,31 @@ export const viewport: Viewport = {
 
 
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <html lang="fr">
+    // On ajoute suppressHydrationWarning ici
+    <html lang="fr" suppressHydrationWarning>
       <head>
-        {/* On force l'enregistrement du Service Worker */}
-        <script dangerouslySetInnerHTML={{ __html: `
-          if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function() {
-              navigator.serviceWorker.register('/sw.js');
-            });
-          }
-        `}} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js');
+                });
+              }
+            `,
+          }}
+        />
       </head>
-      <body>{children}</body>
+      {/* Et ici aussi par sécurité */}
+      <body suppressHydrationWarning className="bg-black">
+        {children}
+      </body>
     </html>
   );
 }

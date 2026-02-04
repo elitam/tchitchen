@@ -19,90 +19,106 @@ export default function FicheRecette() {
       const { data } = await supabase.from('recipes').select('*').eq('id', id).single()
       if (data) {
         setRecipe(data)
-        setYieldInput(data.base_yield) // On commence avec la quantité de base
+        setYieldInput(data.base_yield)
       }
     }
     fetchRecipe()
   }, [id])
 
-  if (!recipe) return <div className="p-10 text-zinc-500">Chargement...</div>
+  if (!recipe) return <div className="p-10 text-zinc-800 font-black italic">TCHITCHEN...</div>
 
   const deleteRecipe = async () => {
-  const confirmDelete = confirm("Voulez-vous vraiment supprimer cette fiche ? Cette action est définitive.")
-  
-  if (confirmDelete) {
-    const { error } = await supabase
-      .from('recipes')
-      .delete()
-      .eq('id', id)
-
-    if (error) {
-      alert("Erreur lors de la suppression : " + error.message)
-    } else {
-      router.push('/recettes') // On repart à la galerie après suppression
+    if (confirm("Supprimer la fiche ?")) {
+      await supabase.from('recipes').delete().eq('id', id)
+      router.push('/recettes')
     }
   }
-}
+
+  const minYield = Math.max(0.1, recipe.base_yield * 0.1)
+  const maxYield = recipe.base_yield * 5
 
   return (
-    <main className="min-h-screen bg-black text-white pb-20">
-      {/* Barre d'actions du haut */}
-<div className="flex justify-between items-center p-4">
-  <button onClick={() => router.back()} className="text-zinc-400 p-2">
-    ← Retour
-  </button>
-  
-  <button 
-    onClick={deleteRecipe}
-    className="p-2 text-zinc-600 hover:text-red-500 transition-colors"
-  >
-    <span className="text-xs font-black uppercase tracking-widest mr-2">Supprimer</span>
-    🗑️
-  </button>
-</div>
+    <main className="min-h-screen bg-black text-white font-sans overflow-x-hidden">
+      {/* Styles injectés pour le slider et les pointillés */}
+      <style jsx global>{`
+        input[type='range'] { -webkit-appearance: none; background: transparent; }
+        input[type='range']::-webkit-slider-runnable-track { width: 100%; height: 2px; background: #1e1e1e; }
+        input[type='range']::-webkit-slider-thumb {
+          -webkit-appearance: none; height: 18px; width: 18px; border-radius: 50%;
+          background: #3b82f6; cursor: pointer; margin-top: -8px; 
+          border: 3px solid black; box-shadow: 0 0 0 1px #3b82f6;
+        }
+        .dotted-line { flex-grow: 1; border-bottom: 2px dotted #27272a; margin: 0 8px 6px 8px; }
+      `}</style>
 
-      {/* Hero Image */}
-      <div className="h-64 w-full bg-zinc-900">
-        {recipe.image_url && <img src={recipe.image_url} className="w-full h-full object-cover" />}
+      {/* Image Header */}
+      <div className="relative w-full h-[35vh] bg-zinc-900">
+        {recipe.image_url && <img src={recipe.image_url} className="w-full h-full object-cover" alt="" />}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+        
+        {/* Navigation buttons */}
+        <div className="absolute top-0 w-full p-6 flex justify-between items-start pt-[calc(env(safe-area-inset-top)+10px)]">
+          <button onClick={() => router.back()} className="bg-black/20 backdrop-blur-md rounded-full p-2">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button onClick={deleteRecipe} className="bg-black/20 backdrop-blur-md rounded-full p-2 opacity-40">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+          </button>
+        </div>
+
+        {/* Titre & Station (Sur l'image) */}
+        <div className="absolute bottom-6 left-6 right-6">
+          <h1 className="text-3xl font-black uppercase tracking-tight leading-none mb-1">{recipe.title}</h1>
+          <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em]">{recipe.station || 'GENERAL'}</p>
+        </div>
       </div>
 
-      <div className="p-6">
-        <h1 className="text-4xl font-black mb-2 italic">{recipe.title}</h1>
-        <p className="text-zinc-500 uppercase text-xs font-black tracking-widest mb-8">{recipe.station}</p>
-
-        {/* CALCULATEUR */}
-        <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-3xl mb-8">
-          <p className="text-xs font-bold text-zinc-500 uppercase mb-4">Quantité souhaitée ({recipe.unit})</p>
+      <div className="p-8 space-y-12">
+        {/* SECTION 1 : RENDEMENT (Le gros chiffre bleu) */}
+        <div className="flex flex-col items-center space-y-4">
+          <div className="flex items-baseline gap-2">
+            <span className="text-5xl font-black text-blue-500 tracking-tighter">
+              {yieldInput.toFixed(recipe.unit === 'portion' ? 0 : 1)}
+            </span>
+            <span className="text-xl font-black text-blue-500/50 uppercase">{recipe.unit}</span>
+          </div>
           <input 
-            type="number" 
+            type="range" min={minYield} max={maxYield} 
+            step={recipe.unit === 'portion' ? 1 : 0.1}
             value={yieldInput}
             onChange={(e) => setYieldInput(Number(e.target.value))}
-            className="bg-transparent text-5xl font-black w-full outline-none text-blue-500"
+            className="w-full"
           />
         </div>
 
-        {/* INGRÉDIENTS */}
-        <div className="mb-8">
-          <h2 className="text-xl font-bold mb-4">Ingrédients</h2>
-          <div className="space-y-3">
+        {/* SECTION 2 : INGRÉDIENTS (Style Carte Menu) */}
+        <div className="space-y-6">
+          <h2 className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.3em]">Mise en place</h2>
+          <div className="space-y-4">
             {recipe.ingredients?.map((ing: any, index: number) => (
-              <div key={index} className="flex justify-between p-4 bg-zinc-900/50 rounded-xl border border-zinc-800">
-                <span className="font-medium">{ing.item}</span>
-                <span className="font-mono text-blue-400">
-                  {/* MATH : (Qté de base / Rendement de base) * Rendement voulu */}
-                  {((ing.qty / recipe.base_yield) * yieldInput).toFixed(2)} {ing.unit}
+              <div key={index} className="flex items-end text-lg">
+                <span className="text-zinc-400 font-bold">{ing.item}</span>
+                <div className="dotted-line" />
+                <span className="text-blue-500 font-mono font-bold">
+                  {((ing.qty / recipe.base_yield) * yieldInput).toFixed(recipe.unit === 'portion' ? 0 : 2)}
+                  <span className="ml-1 text-sm text-blue-500/50">{ing.unit}</span>
                 </span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* INSTRUCTIONS */}
-        <div>
-          <h2 className="text-xl font-bold mb-4">Préparation</h2>
-          <p className="text-zinc-400 leading-relaxed whitespace-pre-line">
-            {recipe.instructions || "Aucune instruction saisie."}
-          </p>
+        {/* SECTION 3 : PROCÉDÉ */}
+        <div className="space-y-6 pb-20">
+          <h2 className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.3em]">Procédé</h2>
+          <div className="space-y-6">
+            {recipe.instructions ? recipe.instructions.split('\n').filter((l:any)=>l.trim()).map((step: string, i: number) => (
+              <div key={i} className="flex gap-4 items-start">
+                <span className="text-zinc-800 font-black italic text-xl leading-none">{i + 1}.</span>
+                <p className="text-zinc-400 leading-relaxed text-[17px]">{step}</p>
+              </div>
+            )) : <p className="text-zinc-800 italic">Pas d'instructions...</p>}
+          </div>
         </div>
       </div>
     </main>

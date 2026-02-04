@@ -1,4 +1,5 @@
 'use client'
+export const dynamic = 'force-dynamic'
 import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
@@ -31,7 +32,7 @@ export default function Recettes() {
 
   return (
     <main className="min-h-screen bg-black text-white p-6 pb-32">
-      <h1 className="text-4xl font-black tracking-tighter italic mb-8">Tchitchen</h1>
+      <h1 className="text-4xl font-black tracking-tighter mb-8">Tchitchen</h1>
 
       {/* Sélecteur d'onglets */}
       <div className="flex bg-zinc-900 p-1 rounded-xl mb-6">
