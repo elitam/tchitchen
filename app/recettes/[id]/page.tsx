@@ -40,6 +40,16 @@ export default function FicheRecette() {
 
   return (
     <main className="min-h-screen bg-black text-white font-sans overflow-x-hidden">
+      <style jsx global>{`
+        input[type='range'] { -webkit-appearance: none; background: transparent; }
+        input[type='range']::-webkit-slider-runnable-track { width: 100%; height: 2px; background: #1e1e1e; }
+        input[type='range']::-webkit-slider-thumb {
+          -webkit-appearance: none; height: 18px; width: 18px; border-radius: 50%;
+          background: #3b82f6; cursor: pointer; margin-top: -8px; 
+          border: 3px solid black; box-shadow: 0 0 0 1px #3b82f6;
+        }
+        .dotted-line { flex-grow: 1; border-bottom: 2px dotted #27272a; margin: 0 8px 6px 8px; }
+      `}</style>
   {/* Image Header */}
   <div className="relative w-full h-[35vh] bg-zinc-900">
     {recipe.image_url && <img src={recipe.image_url} className="w-full h-full object-cover" alt="" />}
