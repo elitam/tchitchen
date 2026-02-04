@@ -111,9 +111,20 @@ export default function FicheRecette() {
   {/* ON AFFICHE LA MISE EN PLACE UNIQUEMENT POUR LA PRODUCTION */}
   {recipe.category === 'production' && (
     <div className="space-y-6">
-      <h2 className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.3em]">Mise en place</h2>
-      {/* ... (ton code de liste d'ingrédients avec pointillés) */}
-    </div>
+          <h2 className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.3em]">Mise en place</h2>
+          <div className="space-y-4">
+            {recipe.ingredients?.map((ing: any, index: number) => (
+              <div key={index} className="flex items-end text-lg">
+                <span className="text-zinc-400 font-bold">{ing.item}</span>
+                <div className="dotted-line" />
+                <span className="text-blue-500 font-mono font-bold">
+                  {((ing.qty / recipe.base_yield) * yieldInput).toFixed(recipe.unit === 'portion' ? 0 : 2)}
+                  <span className="ml-1 text-sm text-blue-500/50">{ing.unit}</span>
+                </span>
+              </div>
+            ))}
+          </div>
+          </div>
   )}
 
   {/* PROCÉDÉ (PRODUCTION) OU COMPOSANTS (PASS) */}
