@@ -1,192 +1,105 @@
 'use client'
-import { useState } from 'react'
+export const dynamic = 'force-dynamic'
+import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+
+
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
-export default function AjouterRecette() {
-  const router = useRouter()
-  const [loading, setLoading] = useState(false)
-  
-  // État de la recette
-  const [title, setTitle] = useState('')
-  const [category, setCategory] = useState<'production' | 'plating'>('production')
-  const [station, setStation] = useState('')
-  const [baseYield, setBaseYield] = useState(1)
-  const [unit, setUnit] = useState('kg')
-  const [instructions, setInstructions] = useState('')
-  const [imageUrl, setImageUrl] = useState('')
-  
-  // État des ingrédients
-  const [ingredients, setIngredients] = useState([
-    { item: '', qty: 0, unit: 'g' }
-  ])
+export default function Recettes() {
+  const [recipes, setRecipes] = useState<any[]>([])
+  const [view, setView] = useState<'production' | 'plating'>('production')
+  const [search, setSearch] = useState('')
 
-  const addIngredient = () => {
-    setIngredients([...ingredients, { item: '', qty: 0, unit: 'g' }])
-  }
-
-  const updateIngredient = (index: number, field: string, value: any) => {
-    const newIngs = [...ingredients]
-    newIngs[index] = { ...newIngs[index], [field]: value }
-    setIngredients(newIngs)
-  }
-
-  const removeIngredient = (index: number) => {
-    setIngredients(ingredients.filter((_, i) => i !== index))
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-
-    const { error } = await supabase.from('recipes').insert([{
-      title,
-      category,
-      station,
-      base_yield: baseYield,
-      unit,
-      ingredients,
-      instructions,
-      image_url: imageUrl
-    }])
-
-    if (error) {
-      alert("Erreur: " + error.message)
-      setLoading(false)
-    } else {
-      router.push('/recettes')
+  useEffect(() => {
+    const fetchRecipes = async () => {
+      const { data } = await supabase.from('recipes').select('*')
+      if (data) setRecipes(data)
     }
-  }
+    fetchRecipes()
+  }, [])
+
+  // Filtrage selon l'onglet et la recherche
+  const filteredRecipes = recipes.filter(r => 
+    r.category === view && 
+    r.title.toLowerCase().includes(search.toLowerCase())
+  )
 
   return (
-    <main className="min-h-screen bg-black text-white p-6 pb-32 pt-[calc(env(safe-area-inset-top)+20px)] font-sans overflow-x-hidden">
-      <div className="flex justify-between items-center mb-10">
-        <h1 className="text-3xl font-black tracking-tighter uppercase">Nouvelle Fiche</h1>
-        <button onClick={() => router.back()} className="text-zinc-500 font-bold text-xs uppercase">Annuler</button>
+    <main className="min-h-screen bg-black text-white p-6 pb-32">
+      <h1 className="text-4xl font-black tracking-tighter mb-8">Tchitchen</h1>
+
+      {/* Sélecteur d'onglets */}
+      <div className="flex bg-zinc-900 p-1 rounded-xl mb-6">
+        <button 
+          onClick={() => setView('production')}
+          className={`flex-1 py-2 rounded-lg font-bold text-sm transition-all ${view === 'production' ? 'bg-zinc-700 text-white' : 'text-zinc-500'}`}
+        >
+          Production
+        </button>
+        <button 
+          onClick={() => setView('plating')}
+          className={`flex-1 py-2 rounded-lg font-bold text-sm transition-all ${view === 'plating' ? 'bg-zinc-700 text-white' : 'text-zinc-500'}`}
+        >
+          Le Pass
+        </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
-        
-        {/* INFOS DE BASE */}
-        <div className="space-y-4">
-          <input 
-            required
-            type="text" placeholder="Nom de la recette..." 
-            value={title} onChange={(e) => setTitle(e.target.value)}
-            className="w-full bg-transparent border-b border-zinc-800 py-4 text-2xl font-bold outline-none focus:border-blue-500 transition-colors"
-          />
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest block mb-2">Catégorie</label>
-              <select 
-                value={category} onChange={(e:any) => setCategory(e.target.value)}
-                className="w-full bg-zinc-900 p-3 rounded-xl border border-zinc-800 outline-none text-sm"
-              >
-                <option value="production">Production</option>
-                <option value="plating">Le Pass</option>
-              </select>
-            </div>
-            <div>
-              <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest block mb-2">Station</label>
-              <input 
-                type="text" placeholder="Ex: Saucier" 
-                value={station} onChange={(e) => setStation(e.target.value)}
-                className="w-full bg-zinc-900 p-3 rounded-xl border border-zinc-800 outline-none text-sm"
-              />
-            </div>
-          </div>
+      {/* Barre de Recherche */}
+      <div className="relative mb-8">
+        <input 
+          type="text"
+          placeholder="Rechercher une recette..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full bg-zinc-900 border border-zinc-800 p-4 pl-12 rounded-2xl outline-none focus:border-zinc-600"
+        />
+        <span className="absolute left-4 top-4 opacity-30 text-xl">🔍</span>
+      </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest block mb-2">Rendement de base</label>
-              <input 
-                type="number" step="0.1"
-                value={baseYield} 
-                onFocus={(e) => e.target.select()} // Focus Auto-select
-                onChange={(e) => setBaseYield(Number(e.target.value))}
-                className="w-full bg-zinc-900 p-3 rounded-xl border border-zinc-800 outline-none text-sm text-blue-500 font-bold"
-              />
-            </div>
-            <div>
-              <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest block mb-2">Unité</label>
-              <input 
-                type="text" placeholder="kg, L, portion..." 
-                value={unit} onChange={(e) => setUnit(e.target.value)}
-                className="w-full bg-zinc-900 p-3 rounded-xl border border-zinc-800 outline-none text-sm"
-              />
-            </div>
-          </div>
-        </div>
+      {/* Grille de Recettes */}
+<div className="grid grid-cols-2 gap-4">
+  {filteredRecipes.map((recipe) => (
+    /* On commence par le Link (L'enveloppe cliquable) */
+    <Link 
+      href={`/recettes/${recipe.id}`} 
+      key={recipe.id} 
+      className="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden active:scale-95 transition-transform"
+    >
+      {/* Tout ce qu'il y a ici est "entouré" par le lien */}
+      <div className="aspect-square bg-zinc-800 relative">
+        {recipe.image_url ? (
+          <img src={recipe.image_url} alt={recipe.title} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-zinc-700 text-4xl">🍲</div>
+        )}
+      </div>
+      <div className="p-4">
+        <h3 className="font-bold text-lg leading-tight mb-1">{recipe.title}</h3>
+        <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">{recipe.station || 'Général'}</p>
+      </div>
+    </Link> /* On ferme le Link ici */
+  ))}
+</div>
 
-        {/* INGRÉDIENTS */}
-        <div className="space-y-4">
-          <h2 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.3em]">Ingrédients</h2>
-          
-          <div className="space-y-3">
-            {ingredients.map((ing, index) => (
-              <div key={index} className="grid grid-cols-[1fr_70px_60px_30px] gap-2 items-center">
-                <input 
-                  type="text" placeholder="Item" value={ing.item}
-                  onChange={(e) => updateIngredient(index, 'item', e.target.value)}
-                  className="bg-zinc-900 p-3 rounded-xl border border-zinc-800 outline-none text-sm"
-                />
-                <input 
-                  type="number" step="0.1" placeholder="Qté" value={ing.qty}
-                  onFocus={(e) => e.target.select()} // Focus Auto-select
-                  onChange={(e) => updateIngredient(index, 'qty', Number(e.target.value))}
-                  className="bg-zinc-900 p-3 rounded-xl border border-zinc-800 outline-none text-sm text-center text-blue-400 font-bold"
-                />
-                <input 
-                  type="text" placeholder="Unité" value={ing.unit}
-                  onChange={(e) => updateIngredient(index, 'unit', e.target.value)}
-                  className="bg-zinc-900 p-3 rounded-xl border border-zinc-800 outline-none text-sm text-center"
-                />
-                <button 
-                  type="button" onClick={() => removeIngredient(index)}
-                  className="text-zinc-700 hover:text-red-500 text-lg"
-                >✕</button>
-              </div>
-            ))}
-          </div>
-          
-          <button 
-            type="button" onClick={addIngredient}
-            className="w-full py-3 border border-dashed border-zinc-800 rounded-xl text-zinc-500 text-xs font-bold uppercase"
-          >
-            + Ajouter un ingrédient
-          </button>
-        </div>
+<Link 
+        href="/recettes/ajouter"
+        className="fixed bottom-28 right-6 w-16 h-16 bg-white text-black rounded-full text-4xl shadow-2xl flex items-center justify-center active:scale-90 transition-transform z-40"
+      >
+        +
+      </Link>
 
-        {/* INSTRUCTIONS & IMAGE */}
-        <div className="space-y-4">
-          <label className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.3em] block">Procédé</label>
-          <textarea 
-            rows={5} placeholder="Étapes de préparation..." 
-            value={instructions} onChange={(e) => setInstructions(e.target.value)}
-            className="w-full bg-zinc-900 p-4 rounded-2xl border border-zinc-800 outline-none text-sm leading-relaxed"
-          />
-          
-          <label className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.3em] block">URL Image</label>
-          <input 
-            type="text" placeholder="https://..." 
-            value={imageUrl} onChange={(e) => setImageUrl(e.target.value)}
-            className="w-full bg-zinc-900 p-3 rounded-xl border border-zinc-800 outline-none text-sm"
-          />
-        </div>
-
-        <button 
-          disabled={loading}
-          className="w-full bg-white text-black py-5 rounded-2xl font-black uppercase tracking-widest active:scale-95 transition-transform disabled:opacity-50"
-        >
-          {loading ? 'Création...' : 'Sauvegarder la fiche'}
-        </button>
-      </form>
+      {/* Navigation Basse (On active le lien RECETTES) */}
+      <div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-xl border-t border-zinc-800 p-6 flex justify-around items-center z-50">
+        <Link href="/" className="text-zinc-600 text-xs font-black tracking-widest uppercase">Accueil</Link>
+        <button className="text-white text-xs font-black tracking-widest uppercase">Recettes</button>
+        <button className="text-zinc-600 text-xs font-black tracking-widest uppercase opacity-50">Historique</button>
+      </div>
     </main>
   )
 }
