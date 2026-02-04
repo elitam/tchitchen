@@ -118,18 +118,13 @@ export default function FicheRecette() {
 
   {/* PROCÉDÉ (PRODUCTION) OU COMPOSANTS (PASS) */}
   <div className="space-y-6 pb-20">
-    <h2 className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.3em]">
-      {recipe.category === 'plating' ? 'Composants & Dressage' : 'Procédé'}
-    </h2>
-    <div className="space-y-6">
-      {recipe.instructions ? recipe.instructions.split('\n').filter((l:any)=>l.trim()).map((step: string, i: number) => (
-        <div key={i} className="flex gap-4 items-start">
-          <span className="text-zinc-800 font-black italic text-xl leading-none">{i + 1}.</span>
-          <p className="text-zinc-400 leading-relaxed text-[17px]">{step}</p>
-        </div>
-      )) : <p className="text-zinc-800 italic">Pas d'informations...</p>}
-    </div>
+  <h2 className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.3em]">
+    {recipe.category === 'plating' ? 'Composants & Dressage' : 'Procédé'}
+  </h2>
+  <div className="text-zinc-400 leading-relaxed text-[17px] whitespace-pre-line">
+    {recipe.instructions || <span className="opacity-30 italic">Aucune instruction.</span>}
   </div>
+</div>
 </div>
       
       

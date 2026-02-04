@@ -41,7 +41,7 @@ export default function RootLayout({
 }) {
   return (
     // On ajoute suppressHydrationWarning ici
-    <html lang="fr" suppressHydrationWarning>
+    <html lang="fr" className="bg-black" style={{ backgroundColor: 'black' }} suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -56,7 +56,8 @@ export default function RootLayout({
         />
       </head>
       {/* Et ici aussi par sécurité */}
-      <body suppressHydrationWarning className="bg-black">
+      <body suppressHydrationWarning className="bg-black antialiased" style={{ backgroundColor: 'black' }}>
+    
         {children}
       </body>
     </html>
