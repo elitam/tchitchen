@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
 import useSWR from 'swr'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/app/context/AuthContext' // Vérifie bien ce chemin !
 
 const supabase = createClient(
@@ -52,24 +53,55 @@ export default function Recettes() {
        </span>
     </button>
   </div>
+{/* TOGGLE STYLE IPHONE (Segmented Control) */}
+<div className="relative bg-zinc-900/50 p-1 rounded-2xl mb-8 flex items-center border border-zinc-800/50">
+  {/* Fond coulissant */}
+  <motion.div
+    layout
+    initial={false}
+    animate={{ x: view === 'production' ? '0%' : '100%' }}
+    transition={{ type: "spring", stiffness: 500, damping: 40 }}
+    className="absolute w-[calc(50%-4px)] h-[calc(100%-8px)] bg-zinc-700 rounded-[14px] shadow-lg"
+  />
+  
+  <button
+    onClick={() => setView('production')}
+    className={`relative z-10 flex-1 py-2.5 text-xs font-black uppercase tracking-widest transition-colors duration-300 ${
+      view === 'production' ? 'text-white' : 'text-zinc-500'
+    }`}
+  >
+    La Prod
+  </button>
+  
+  <button
+    onClick={() => setView('plating')}
+    className={`relative z-10 flex-1 py-2.5 text-xs font-black uppercase tracking-widest transition-colors duration-300 ${
+      view === 'plating' ? 'text-white' : 'text-zinc-500'
+    }`}
+  >
+    Le Pass
+  </button>
+</div>
 
-      <div className="flex bg-zinc-900 p-1 rounded-xl mb-6">
-        <button onClick={() => setView('production')}
-          className={`flex-1 py-2 rounded-lg font-bold text-sm transition-all ${view === 'production' ? 'bg-zinc-700 text-white' : 'text-zinc-500'}`}>
-          Production
-        </button>
-        <button onClick={() => setView('plating')}
-          className={`flex-1 py-2 rounded-lg font-bold text-sm transition-all ${view === 'plating' ? 'bg-zinc-700 text-white' : 'text-zinc-500'}`}>
-          Le Pass
-        </button>
-      </div>
-
-      <div className="relative mb-8">
-        <input type="text" placeholder="Rechercher..." value={search} onChange={(e) => setSearch(e.target.value)}
-          className="w-full bg-zinc-900 border border-zinc-800 p-4 pl-12 rounded-2xl outline-none focus:border-zinc-600"
-        />
-        <span className="absolute left-4 top-4 opacity-30 text-xl">🔍</span>
-      </div>
+{/* BARRE DE RECHERCHE STYLE IOS */}
+<div className="relative mb-10 group">
+  <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+    <svg 
+      width="18" height="18" viewBox="0 0 24 24" fill="none" 
+      stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" 
+      className="text-zinc-600 group-focus-within:text-blue-500 transition-colors"
+    >
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+    </svg>
+  </div>
+  <input
+    type="text"
+    placeholder="Rechercher..."
+    value={search}
+    onChange={(e) => setSearch(e.target.value)}
+    className="w-full bg-zinc-900/50 border border-zinc-800/50 p-4 pl-12 rounded-2xl text-sm font-bold placeholder:text-zinc-700 outline-none focus:bg-zinc-900 focus:border-zinc-700 transition-all"
+  />
+</div>
 
       <div className="grid grid-cols-2 gap-4">
         {filteredRecipes.map((recipe) => (
