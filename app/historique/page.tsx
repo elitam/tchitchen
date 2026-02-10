@@ -14,7 +14,7 @@ const supabase = createClient(
 
 // ON UTILISE "export default" CLAIREMENT ICI
 export default function HistoriquePage() {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   const [logs, setLogs] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -40,13 +40,20 @@ export default function HistoriquePage() {
   return (
     <main className="min-h-screen bg-black text-white p-6 pb-32 pt-[calc(env(safe-area-inset-top)+20px)]">
       <div className="flex justify-between items-center mb-10">
-        <h1 className="text-4xl font-black tracking-tighter uppercase">Historique</h1>
-        <div className="w-10 h-10 bg-zinc-900 rounded-full flex items-center justify-center border border-zinc-800">
-          <span className="text-[10px] font-black text-blue-400 uppercase">
-            {user?.initials || '..'}
-          </span>
-        </div>
-      </div>
+    <h1 className="text-4xl font-black tracking-tighter uppercase">
+      {/* Change le nom ici selon la page : Tchitchen, Recettes ou Historique */}
+      Historique 
+    </h1>
+    
+    <button 
+      onClick={() => { if(confirm("Se déconnecter ?")) logout() }}
+      className="w-10 h-10 bg-zinc-900 rounded-full flex items-center justify-center border border-zinc-800 active:scale-90 transition-transform"
+    >
+       <span className="text-[10px] font-black text-blue-400 uppercase tracking-tighter">
+         {user?.initials || '..'}
+       </span>
+    </button>
+  </div>
 
       <div className="space-y-4">
         {loading ? (

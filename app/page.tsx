@@ -94,19 +94,20 @@ const deleteTask = async (id: string, taskName: string) => {
   return (
     <main className="min-h-screen bg-black text-white p-6 pt-[calc(env(safe-area-inset-top)+24px)] pb-32 font-sans">
       <div className="flex justify-between items-center mb-10">
-        <h1 className="text-4xl font-black tracking-tighter italic">Tchitchen</h1>
-        
-        {/* On remplace le div par un button pour pouvoir se déconnecter si besoin */}
-        <button 
-          onClick={() => { if(confirm("Se déconnecter ?")) logout() }}
-          className="w-10 h-10 bg-zinc-900 rounded-full flex items-center justify-center border border-zinc-800 active:scale-90 transition-transform"
-        >
-           {/* On affiche les initiales de l'user connecté */}
-           <span className="text-[10px] font-black text-blue-400 tracking-tighter">
-             {user?.initials}
-           </span>
-        </button>
-      </div>
+    <h1 className="text-4xl font-black tracking-tighter uppercase">
+      {/* Change le nom ici selon la page : Tchitchen, Recettes ou Historique */}
+      Tchitchen 
+    </h1>
+    
+    <button 
+      onClick={() => { if(confirm("Se déconnecter ?")) logout() }}
+      className="w-10 h-10 bg-zinc-900 rounded-full flex items-center justify-center border border-zinc-800 active:scale-90 transition-transform"
+    >
+       <span className="text-[10px] font-black text-blue-400 uppercase tracking-tighter">
+         {user?.initials || '..'}
+       </span>
+    </button>
+  </div>
 
       <div className="space-y-6">
         <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-[0.2em]">Le Mur</h2>

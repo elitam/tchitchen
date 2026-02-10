@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
 import useSWR from 'swr'
-import { useAuth } from '../context/AuthContext' // Vérifie bien ce chemin !
+import { useAuth } from '@/app/context/AuthContext' // Vérifie bien ce chemin !
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,7 +21,7 @@ const fetcher = async () => {
 }
 
 export default function Recettes() {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   const [view, setView] = useState<'production' | 'plating'>('production')
   const [search, setSearch] = useState('')
 
@@ -38,13 +38,21 @@ export default function Recettes() {
 
   return (
     <main className="min-h-screen bg-black text-white p-6 pb-32">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-4xl font-black tracking-tighter mb-0">Tchitchen</h1>
-        {/* Initiales en haut à droite */}
-        <div className="w-10 h-10 bg-zinc-900 rounded-full flex items-center justify-center border border-zinc-800">
-           <span className="text-[10px] font-black text-blue-400">{user?.initials || '..'}</span>
-        </div>
-      </div>
+      <div className="flex justify-between items-center mb-10">
+    <h1 className="text-4xl font-black tracking-tighter uppercase">
+      {/* Change le nom ici selon la page : Tchitchen, Recettes ou Historique */}
+      Recettes 
+    </h1>
+    
+    <button 
+      onClick={() => { if(confirm("Se déconnecter ?")) logout() }}
+      className="w-10 h-10 bg-zinc-900 rounded-full flex items-center justify-center border border-zinc-800 active:scale-90 transition-transform"
+    >
+       <span className="text-[10px] font-black text-blue-400 uppercase tracking-tighter">
+         {user?.initials || '..'}
+       </span>
+    </button>
+  </div>
 
       <div className="flex bg-zinc-900 p-1 rounded-xl mb-6">
         <button onClick={() => setView('production')}
