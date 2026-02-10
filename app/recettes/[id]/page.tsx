@@ -125,27 +125,27 @@ export default function FicheRecette() {
       </div>
 
       <div className="p-8 space-y-12">
-        {/* CALCULATEUR STYLE IOS */}
+        {/* CALCULATEUR STYLE IOS COMPACT */}
 {recipe.category === 'production' && (
-  <div className="flex flex-col items-center bg-zinc-900/40 p-8 rounded-[2.5rem] border border-zinc-800/50 shadow-inner">
+  <div className="flex flex-col items-center bg-zinc-900/40 py-5 px-6 rounded-[2rem] border border-zinc-800/50 shadow-inner mb-8">
     
-    {/* Affichage du Chiffre */}
-    <div className="flex items-baseline gap-2 mb-8">
+    {/* Affichage du Chiffre - Marges réduites */}
+    <div className="flex items-baseline gap-2 mb-4">
       <motion.span 
         key={yieldInput}
-        initial={{ scale: 0.9, opacity: 0.8 }}
+        initial={{ scale: 0.95, opacity: 0.9 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="text-6xl font-black text-blue-500 tracking-tighter"
+        className="text-5xl font-black text-blue-500 tracking-tighter"
       >
         {yieldInput.toFixed(recipe.unit === 'portion' ? 0 : 1)}
       </motion.span>
-      <span className="text-xl font-black text-blue-500/40 uppercase tracking-widest">
+      <span className="text-lg font-black text-blue-500/40 uppercase tracking-widest">
         {recipe.unit || 'kg'}
       </span>
     </div>
 
-    {/* Le Slider Customisé */}
-    <div className="w-full px-2">
+    {/* Le Slider - Plus fin et épuré */}
+    <div className="w-full">
       <input 
         type="range" 
         min={minYield} 
@@ -153,43 +153,36 @@ export default function FicheRecette() {
         step={0.1}
         value={yieldInput} 
         onChange={(e) => setYieldInput(Number(e.target.value))}
-        className="ios-slider w-full h-2 bg-zinc-800 rounded-full appearance-none outline-none"
+        className="ios-slider w-full h-1.5 bg-zinc-800 rounded-full appearance-none outline-none"
       />
     </div>
 
-    <div className="w-full flex justify-between mt-4 px-2">
-      <span className="text-[10px] font-black text-zinc-700 uppercase tracking-tighter">Minimum</span>
-      <span className="text-[10px] font-black text-zinc-700 uppercase tracking-tighter">Maximum</span>
-    </div>
-
-    {/* Style CSS Injecté pour le look iOS */}
+    {/* Style CSS Injecté */}
     <style jsx>{`
       .ios-slider::-webkit-slider-thumb {
         appearance: none;
-        width: 28px;
-        height: 28px;
+        width: 26px;
+        height: 26px;
         background: white;
         border-radius: 50%;
         cursor: pointer;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1), 0 10px 15px -3px rgb(0 0 0 / 0.2);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        border: 0.5px solid rgba(0,0,0,0.1);
         transition: transform 0.1s ease-in-out;
       }
       .ios-slider:active::-webkit-slider-thumb {
-        transform: scale(1.2);
+        transform: scale(1.15);
       }
       .ios-slider::-moz-range-thumb {
-        width: 28px;
-        height: 28px;
+        width: 26px;
+        height: 26px;
         background: white;
-        border: none;
         border-radius: 50%;
-        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.3);
+        border: none;
       }
     `}</style>
   </div>
 )}
-
         {/* INGRÉDIENTS */}
         {recipe.category === 'production' && recipe.ingredients && (
           <div className="space-y-6">
