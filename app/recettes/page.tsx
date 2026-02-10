@@ -67,6 +67,14 @@ export default function Recettes() {
 
       {/* Grille de Recettes */}
       <div className="grid grid-cols-2 gap-4">
+
+{/* État de chargement visuel */}
+        {!recipes && (
+          <div className="col-span-2 py-20 text-center text-zinc-800 font-black italic animate-pulse">
+            CHARGEMENT DE LA BRIGADE...
+          </div>
+        )}
+
         {filteredRecipes.map((recipe) => (
           <Link 
             href={`/recettes/${recipe.id}`} 
