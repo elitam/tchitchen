@@ -6,7 +6,7 @@ const USERS_MAP: any = {
   "2410": { initials: "ZZ", role: "user" }
 }
 
-const AuthContext = createContext<any>(null)
+const AuthContext = createContext<any>({ user: null, logout: () => {} })
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any>(null)
@@ -114,4 +114,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   )
 }
 
-export const useAuth = () => useContext(AuthContext)
+export const useAuth = () => {
+  const context = useContext(AuthContext)
+  if (!context) return { user: null, logout: () => {} } // Sécurité anti-crash
+  return context
+}
