@@ -83,7 +83,7 @@ export default function Recettes() {
   </button>
 </div>
 
-{/* BARRE DE RECHERCHE STYLE IOS */}
+{/* BARRE DE RECHERCHE STYLE IOS - FIX ZOOM AUTO */}
 <div className="relative mb-10 group">
   <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
     <svg 
@@ -99,7 +99,8 @@ export default function Recettes() {
     placeholder="Rechercher..."
     value={search}
     onChange={(e) => setSearch(e.target.value)}
-    className="w-full bg-zinc-900/50 border border-zinc-800/50 p-4 pl-12 rounded-2xl text-sm font-bold placeholder:text-zinc-700 outline-none focus:bg-zinc-900 focus:border-zinc-700 transition-all"
+    /* "text-base" est crucial ici pour éviter le zoom iOS */
+    className="w-full bg-zinc-900/50 border border-zinc-800/50 p-4 pl-12 rounded-2xl text-base font-medium placeholder:text-zinc-700 outline-none focus:bg-zinc-900 focus:border-zinc-700 transition-all shadow-inner"
   />
 </div>
 
