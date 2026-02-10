@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import useSWR from 'swr'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -11,20 +10,57 @@ const supabase = createClient(
 )
 
 export default function FicheRecette() {
-  const { id } = useParams()
+  const params = useParams()
+  const id = params?.id as string // Force l'ID en string
   const router = useRouter()
+  
   const [recipe, setRecipe] = useState<any>(null)
   const [yieldInput, setYieldInput] = useState<number>(1)
+  const [error, setError] = useState<string | null>(null) // Pour traquer les erreurs
 
   useEffect(() => {
-    const fetcher = async () => {
-  const { data } = await supabase.from('recipes').select('id, title, category, station, image_url')
-  return data
-}
-    fetcher()
+    if (!id) return
+
+    const fetchRecipe = async () => {
+      // On récupère TOUT pour être sûr, mais on check les erreurs
+      const { data, error: sbError } = await supabase
+        .from('recipes')
+        .select('*')
+        .eq('id', id)
+        .single()
+
+      if (sbError) {
+        console.error("Erreur Supabase:", sbError)
+        setError(sbError.message)
+      } else if (data) {
+        setRecipe(data)
+        setYieldInput(data.base_yield || 1)
+      } else {
+        setError("Recette introuvable.")
+      }
+    }
+
+    fetchRecipe()
   }, [id])
 
-  if (!recipe) return <div className="p-10 text-zinc-800 font-black italic">TCHITCHEN...</div>
+  // Gestion des états d'affichage
+  if (error) return (
+    <div className="min-h-screen bg-black text-white p-10">
+      <h1 className="text-red-500 font-bold">Erreur</h1>
+      <p className="text-zinc-500">{error}</p>
+      <button onClick={() => router.back()} className="mt-4 text-blue-500 underline">Retour</button>
+    </div>
+  )
+
+  if (!recipe) return (
+    <div className="min-h-screen bg-black flex items-center justify-center">
+      <p className="text-zinc-800 font-black italic animate-pulse">TCHITCHEN...</p>
+    </div>
+  )
+
+  // Calcule les bornes pour le slider
+  const minYield = Math.max(0.1, (recipe.base_yield || 1) * 0.1)
+  const maxYield = (recipe.base_yield || 1) * 5
 
   const deleteRecipe = async () => {
     if (confirm("Supprimer la fiche ?")) {
@@ -32,9 +68,6 @@ export default function FicheRecette() {
       router.push('/recettes')
     }
   }
-
-  const minYield = Math.max(0.1, recipe.base_yield * 0.1)
-  const maxYield = recipe.base_yield * 5
 
   return (
     <main className="min-h-screen bg-black text-white font-sans overflow-x-hidden">
