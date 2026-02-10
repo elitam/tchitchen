@@ -198,7 +198,7 @@ const generateShoppingList = async () => {
     }`}
   >
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M20 7H4M20 12H4M20 17H4"/></svg>
-    <span className="text-[10px] font-black uppercase">Le Marché</span>
+    <span className="text-[10px] font-black uppercase">Réassort</span>
   </button>
 </div>
         
@@ -330,7 +330,7 @@ const generateShoppingList = async () => {
         
         <div className="px-8">
           <div className="flex justify-between items-center mb-8">
-            <h3 className="text-2xl font-black uppercase tracking-tight">Le Marché</h3>
+            <h3 className="text-2xl font-black uppercase tracking-tight">Réassort</h3>
             <button onClick={() => setIsShoppingListOpen(false)} className="text-zinc-500 font-bold">OK</button>
           </div>
 
