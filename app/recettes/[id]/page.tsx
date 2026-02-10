@@ -183,27 +183,40 @@ export default function FicheRecette() {
     `}</style>
   </div>
 )}
-        {/* INGRÉDIENTS */}
-        {recipe.category === 'production' && recipe.ingredients && (
-          <div className="space-y-6">
-            <h2 className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.3em]">Mise en place</h2>
-            <div className="space-y-4">
-              {recipe.ingredients.map((ing: any, i: number) => {
-                const ratio = yieldInput / (recipe.base_yield || 1)
-                const calculatedQty = (ing.qty * ratio).toFixed(ing.qty * ratio < 10 ? 1 : 0)
-                return (
-                  <div key={i} className="flex justify-between items-end border-b border-zinc-900 pb-2">
-                    <span className="text-zinc-400 font-bold uppercase text-sm">{ing.item}</span>
-                    <div className="flex gap-1 items-baseline">
-                      <span className="text-white font-black">{calculatedQty}</span>
-                      <span className="text-zinc-600 text-[10px] font-bold lowercase">{ing.unit}</span>
-                    </div>
-                  </div>
-                )
-              })}
+       {/* INGRÉDIENTS STYLE IOS LISIBLE */}
+{recipe.category === 'production' && recipe.ingredients && (
+  <div className="space-y-6">
+    <h2 className="text-[11px] font-black text-zinc-700 uppercase tracking-[0.3em] px-1">
+      Mise en place
+    </h2>
+    
+    <div className="space-y-2">
+      {recipe.ingredients.map((ing: any, i: number) => {
+        const ratio = yieldInput / (recipe.base_yield || 1)
+        const calculatedQty = (ing.qty * ratio).toFixed(ing.qty * ratio < 10 ? 1 : 0)
+        
+        return (
+          <div key={i} className="flex justify-between items-baseline bg-zinc-900/20 p-4 rounded-2xl border-b border-zinc-900/50">
+            {/* Nom de l'ingrédient - Plus grand et clair */}
+            <span className="text-zinc-300 font-bold text-[16px] uppercase tracking-tight">
+              {ing.item}
+            </span>
+            
+            {/* Quantité et Unité - Block compact et contrasté */}
+            <div className="flex gap-1.5 items-baseline">
+              <span className="text-white font-black text-2xl tracking-tighter">
+                {calculatedQty}
+              </span>
+              <span className="text-zinc-500 text-xs font-black uppercase tracking-widest">
+                {ing.unit}
+              </span>
             </div>
           </div>
-        )}
+        )
+      })}
+    </div>
+  </div>
+)}
 
         {/* PROCÉDÉ */}
         <div className="space-y-6 pb-20">
