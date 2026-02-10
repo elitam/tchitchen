@@ -92,10 +92,11 @@ const deleteTask = async (id: string, taskName: string) => {
 }
 
   return (
-    <main className="min-h-screen bg-black text-white p-6 pt-[calc(env(safe-area-inset-top)+24px)] pb-32 font-sans">
-      <div className="flex justify-between items-center mb-10">
+    <main className="min-h-screen bg-black text-white p-6 pt-[calc(env(safe-area-inset-top)+20px)] pb-32">
+  
+  {/* 2. Le Header standardisé */}
+  <div className="flex justify-between items-center mb-10">
     <h1 className="text-4xl font-black tracking-tighter uppercase">
-      {/* Change le nom ici selon la page : Tchitchen, Recettes ou Historique */}
       Tchitchen 
     </h1>
     

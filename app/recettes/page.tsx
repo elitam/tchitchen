@@ -37,10 +37,9 @@ export default function Recettes() {
   if (swrError) return <div className="p-10 text-red-500">Erreur de chargement...</div>
 
   return (
-    <main className="min-h-screen bg-black text-white p-6 pb-32">
-      <div className="flex justify-between items-center mb-10">
+    <main className="min-h-screen bg-black text-white p-6 pt-[calc(env(safe-area-inset-top)+20px)] pb-32">
+  <div className="flex justify-between items-center mb-10">
     <h1 className="text-4xl font-black tracking-tighter uppercase">
-      {/* Change le nom ici selon la page : Tchitchen, Recettes ou Historique */}
       Recettes 
     </h1>
     
