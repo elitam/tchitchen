@@ -1,144 +1,96 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
-import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import useSWR from 'swr'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
-export default function FicheRecette() {
-  const { id } = useParams()
-  const router = useRouter()
-  const [recipe, setRecipe] = useState<any>(null)
-  const [yieldInput, setYieldInput] = useState<number>(1)
+// Fetcher optimisé : on ne demande PAS les ingrédients ni les instructions
+const fetcher = async () => {
+  const { data, error } = await supabase
+    .from('recipes')
+    .select('id, title, category, station, image_url')
+    .order('title')
+  if (error) throw error
+  return data
+}
 
-  useEffect(() => {
-    const fetchRecipe = async () => {
-      const { data } = await supabase.from('recipes').select('*').eq('id', id).single()
-      if (data) {
-        setRecipe(data)
-        setYieldInput(data.base_yield)
-      }
-    }
-    fetchRecipe()
-  }, [id])
+export default function Recettes() {
+  const [view, setView] = useState<'production' | 'plating'>('production')
+  const [search, setSearch] = useState('')
 
-  if (!recipe) return <div className="p-10 text-zinc-800 font-black italic">TCHITCHEN...</div>
+  // SWR gère le cache et le rechargement automatique
+  const { data: recipes, error, isLoading } = useSWR('recipes_list', fetcher)
 
-  const deleteRecipe = async () => {
-    if (confirm("Supprimer la fiche ?")) {
-      await supabase.from('recipes').delete().eq('id', id)
-      router.push('/recettes')
-    }
-  }
-
-  const minYield = Math.max(0.1, recipe.base_yield * 0.1)
-  const maxYield = recipe.base_yield * 5
+  const filteredRecipes = (recipes || []).filter(r => 
+    r.category === view && 
+    r.title.toLowerCase().includes(search.toLowerCase())
+  )
 
   return (
-    <main className="min-h-screen bg-black text-white font-sans overflow-x-hidden">
-      <style jsx global>{`
-        input[type='range'] { -webkit-appearance: none; background: transparent; }
-        input[type='range']::-webkit-slider-runnable-track { width: 100%; height: 2px; background: #1e1e1e; }
-        input[type='range']::-webkit-slider-thumb {
-          -webkit-appearance: none; height: 18px; width: 18px; border-radius: 50%;
-          background: #3b82f6; cursor: pointer; margin-top: -8px; 
-          border: 3px solid black; box-shadow: 0 0 0 1px #3b82f6;
-        }
-        .dotted-line { flex-grow: 1; border-bottom: 2px dotted #27272a; margin: 0 8px 6px 8px; }
-      `}</style>
-  {/* Image Header */}
-  <div className="relative w-full h-[35vh] bg-zinc-900">
-    {recipe.image_url && <img src={recipe.image_url} className="w-full h-full object-cover" alt="" />}
-    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-    
-    {/* BARRE D'ACTIONS - C'est ici que ça se passe */}
-    <div className="absolute top-0 w-full p-6 flex justify-between items-start pt-[calc(env(safe-area-inset-top)+10px)] z-50">
-      {/* Retour */}
-      <button onClick={() => router.back()} className="bg-black/40 backdrop-blur-md rounded-full p-2 border border-white/10">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="m15 18-6-6 6-6"/></svg>
-      </button>
-      
-      {/* Groupe d'actions à droite */}
-      <div className="flex gap-3">
-        {/* BOUTON MODIFIER (Crayon) */}
-        <Link 
-          href={`/recettes/modifier/${id}`} 
-          className="bg-blue-600/80 backdrop-blur-md rounded-full p-2 border border-blue-400/20 shadow-lg"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
-          </svg>
-        </Link>
+    <main className="min-h-screen bg-black text-white p-6 pb-40 pt-[calc(env(safe-area-inset-top)+20px)] overflow-x-hidden">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-4xl font-black tracking-tighter italic">Tchitchen</h1>
+        {isLoading && <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>}
+      </div>
 
-        {/* BOUTON SUPPRIMER (Poubelle) */}
-        <button 
-          onClick={deleteRecipe} 
-          className="bg-black/40 backdrop-blur-md rounded-full p-2 border border-white/10 opacity-60 hover:opacity-100 transition-opacity"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+      {/* Sélecteur d'onglets */}
+      <div className="flex bg-zinc-900 p-1 rounded-2xl mb-8 border border-zinc-800">
+        <button onClick={() => setView('production')}
+          className={`flex-1 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${view === 'production' ? 'bg-zinc-800 text-blue-400 shadow-lg' : 'text-zinc-600'}`}>
+          Production
+        </button>
+        <button onClick={() => setView('plating')}
+          className={`flex-1 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${view === 'plating' ? 'bg-zinc-800 text-blue-400 shadow-lg' : 'text-zinc-600'}`}>
+          Le Pass
         </button>
       </div>
-    </div>
 
-    {/* Titre & Station */}
-    <div className="absolute bottom-6 left-6 right-6">
-      <h1 className="text-3xl font-black uppercase tracking-tight leading-none mb-1">{recipe.title}</h1>
-      <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em]">{recipe.station || 'GENERAL'}</p>
-    </div>
-  </div>
-<div className="p-8 space-y-12">
-  
-  {/* ON AFFICHE LE CALCULATEUR UNIQUEMENT POUR LA PRODUCTION */}
-  {recipe.category === 'production' && (
-    <div className="flex flex-col items-center space-y-4">
-      <div className="flex items-baseline gap-2">
-        <span className="text-5xl font-black text-blue-500 tracking-tighter">
-          {yieldInput.toFixed(recipe.unit === 'portion' ? 0 : 1)}
-        </span>
-        <span className="text-xl font-black text-blue-500/50 uppercase">{recipe.unit}</span>
+      {/* Recherche */}
+      <div className="relative mb-10">
+        <input type="text" placeholder="RECHERCHER..." value={search} onChange={(e) => setSearch(e.target.value)}
+          className="w-full bg-zinc-900 border border-zinc-800 p-5 pl-14 rounded-[2rem] outline-none focus:border-blue-500/50 transition-all font-bold"
+        />
+        <span className="absolute left-6 top-5 opacity-20 text-xl font-bold">🔍</span>
       </div>
-      <input type="range" min={minYield} max={maxYield} step={recipe.unit === 'portion' ? 1 : 0.1}
-        value={yieldInput} onChange={(e) => setYieldInput(Number(e.target.value))}
-        className="w-full"
-      />
-    </div>
-  )}
 
-  {/* ON AFFICHE LA MISE EN PLACE UNIQUEMENT POUR LA PRODUCTION */}
-  {recipe.category === 'production' && (
-    <div className="space-y-6">
-          <h2 className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.3em]">Mise en place</h2>
-          <div className="space-y-4">
-            {recipe.ingredients?.map((ing: any, index: number) => (
-              <div key={index} className="flex items-end text-lg">
-                <span className="text-zinc-400 font-bold">{ing.item}</span>
-                <div className="dotted-line" />
-                <span className="text-blue-500 font-mono font-bold">
-                  {((ing.qty / recipe.base_yield) * yieldInput).toFixed(recipe.unit === 'portion' ? 0 : 2)}
-                  <span className="ml-1 text-sm text-blue-500/50">{ing.unit}</span>
-                </span>
+      {/* Grille de Recettes */}
+      <div className="grid grid-cols-2 gap-6">
+        {filteredRecipes.map((recipe) => (
+          <Link href={`/recettes/${recipe.id}`} key={recipe.id} 
+            className="group active:scale-95 transition-transform"
+          >
+            <div className="aspect-[4/5] bg-zinc-900 rounded-[2.5rem] overflow-hidden border border-zinc-800 relative shadow-2xl">
+              {recipe.image_url ? (
+                <img src={recipe.image_url} alt="" className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 transition-all" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-4xl opacity-20">🍲</div>
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />
+              <div className="absolute bottom-5 left-5 right-5">
+                <p className="text-[8px] font-black uppercase text-blue-400 tracking-[0.2em] mb-1">{recipe.station || 'Général'}</p>
+                <h3 className="font-black text-sm leading-tight uppercase tracking-tight">{recipe.title}</h3>
               </div>
-            ))}
-          </div>
-          </div>
-  )}
+            </div>
+          </Link>
+        ))}
+      </div>
 
-  {/* PROCÉDÉ (PRODUCTION) OU COMPOSANTS (PASS) */}
-  <div className="space-y-6 pb-20">
-  <h2 className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.3em]">
-    {recipe.category === 'plating' ? 'Composants & Dressage' : 'Procédé'}
-  </h2>
-  <div className="text-zinc-400 leading-relaxed text-[17px] whitespace-pre-line">
-    {recipe.instructions || <span className="opacity-30 italic">Aucune instruction.</span>}
-  </div>
-</div>
-</div>
-      
-      
+      {/* Floating Add Button */}
+      <Link href="/recettes/ajouter" className="fixed bottom-28 right-8 w-16 h-16 bg-blue-600 text-white rounded-full text-4xl shadow-2xl flex items-center justify-center active:scale-90 transition-transform z-40 shadow-blue-500/40">
+        +
+      </Link>
+
+      {/* Navigation Basse */}
+      <div className="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur-2xl border-t border-zinc-900 p-8 flex justify-around items-center z-50">
+        <Link href="/" className="text-zinc-600 text-[10px] font-black tracking-[0.2em] uppercase">Le Mur</Link>
+        <button className="text-white text-[10px] font-black tracking-[0.2em] uppercase border-b-2 border-blue-500 pb-1">Recettes</button>
+        <button className="text-zinc-800 text-[10px] font-black tracking-[0.2em] uppercase pointer-events-none">History</button>
+      </div>
     </main>
   )
 }
