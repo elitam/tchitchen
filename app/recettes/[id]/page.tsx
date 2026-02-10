@@ -4,6 +4,8 @@ import { createClient } from '@supabase/supabase-js'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/app/context/AuthContext'
+import { motion, AnimatePresence } from 'framer-motion'
+
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -123,21 +125,70 @@ export default function FicheRecette() {
       </div>
 
       <div className="p-8 space-y-12">
-        {/* CALCULATEUR */}
-        {recipe.category === 'production' && (
-          <div className="flex flex-col items-center space-y-4">
-            <div className="flex items-baseline gap-2">
-              <span className="text-5xl font-black text-blue-500 tracking-tighter">
-                {yieldInput.toFixed(recipe.unit === 'portion' ? 0 : 1)}
-              </span>
-              <span className="text-xl font-black text-blue-500/50 uppercase">{recipe.unit || 'kg'}</span>
-            </div>
-            <input type="range" min={minYield} max={maxYield} step={0.1}
-              value={yieldInput} onChange={(e) => setYieldInput(Number(e.target.value))}
-              className="w-full accent-blue-500"
-            />
-          </div>
-        )}
+        {/* CALCULATEUR STYLE IOS */}
+{recipe.category === 'production' && (
+  <div className="flex flex-col items-center bg-zinc-900/40 p-8 rounded-[2.5rem] border border-zinc-800/50 shadow-inner">
+    
+    {/* Affichage du Chiffre */}
+    <div className="flex items-baseline gap-2 mb-8">
+      <motion.span 
+        key={yieldInput}
+        initial={{ scale: 0.9, opacity: 0.8 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="text-6xl font-black text-blue-500 tracking-tighter"
+      >
+        {yieldInput.toFixed(recipe.unit === 'portion' ? 0 : 1)}
+      </motion.span>
+      <span className="text-xl font-black text-blue-500/40 uppercase tracking-widest">
+        {recipe.unit || 'kg'}
+      </span>
+    </div>
+
+    {/* Le Slider Customisé */}
+    <div className="w-full px-2">
+      <input 
+        type="range" 
+        min={minYield} 
+        max={maxYield} 
+        step={0.1}
+        value={yieldInput} 
+        onChange={(e) => setYieldInput(Number(e.target.value))}
+        className="ios-slider w-full h-2 bg-zinc-800 rounded-full appearance-none outline-none"
+      />
+    </div>
+
+    <div className="w-full flex justify-between mt-4 px-2">
+      <span className="text-[10px] font-black text-zinc-700 uppercase tracking-tighter">Minimum</span>
+      <span className="text-[10px] font-black text-zinc-700 uppercase tracking-tighter">Maximum</span>
+    </div>
+
+    {/* Style CSS Injecté pour le look iOS */}
+    <style jsx>{`
+      .ios-slider::-webkit-slider-thumb {
+        appearance: none;
+        width: 28px;
+        height: 28px;
+        background: white;
+        border-radius: 50%;
+        cursor: pointer;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1), 0 10px 15px -3px rgb(0 0 0 / 0.2);
+        transition: transform 0.1s ease-in-out;
+      }
+      .ios-slider:active::-webkit-slider-thumb {
+        transform: scale(1.2);
+      }
+      .ios-slider::-moz-range-thumb {
+        width: 28px;
+        height: 28px;
+        background: white;
+        border: none;
+        border-radius: 50%;
+        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.3);
+      }
+    `}</style>
+  </div>
+)}
 
         {/* INGRÉDIENTS */}
         {recipe.category === 'production' && recipe.ingredients && (
