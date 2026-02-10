@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion' // Pour les animations
+import { useAuth } from './context/AuthContext'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -17,6 +18,7 @@ const STATUS_LABELS: Record<string, string> = {
 }
 
 export default function Home() {
+  const { user, logout } = useAuth()
   const [tasks, setTasks] = useState<any[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [newTaskName, setNewTaskName] = useState('')
@@ -76,10 +78,18 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-black text-white p-6 pt-[calc(env(safe-area-inset-top)+24px)] pb-32 font-sans">
       <div className="flex justify-between items-center mb-10">
-        <h1 className="text-4xl font-black tracking-tighter">Tchitchen</h1>
-        <div className="w-10 h-10 bg-zinc-800 rounded-full flex items-center justify-center border border-zinc-700">
-           <span className="text-xs font-bold text-zinc-400">EL</span>
-        </div>
+        <h1 className="text-4xl font-black tracking-tighter italic">Tchitchen</h1>
+        
+        {/* On remplace le div par un button pour pouvoir se déconnecter si besoin */}
+        <button 
+          onClick={() => { if(confirm("Se déconnecter ?")) logout() }}
+          className="w-10 h-10 bg-zinc-900 rounded-full flex items-center justify-center border border-zinc-800 active:scale-90 transition-transform"
+        >
+           {/* On affiche les initiales de l'user connecté */}
+           <span className="text-[10px] font-black text-blue-400 tracking-tighter">
+             {user?.initials}
+           </span>
+        </button>
       </div>
 
       <div className="space-y-6">

@@ -1,7 +1,8 @@
-import type { Metadata, Viewport } from "next"; // Importe Viewport aussi
-import "./globals.css";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+// Utilisation de l'alias @ pour être sûr que TypeScript le trouve
+import { AuthProvider } from '@/app/context/AuthContext'; 
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -12,8 +13,6 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
-
-
 
 export const metadata: Metadata = {
   title: "Tchitchen",
@@ -29,10 +28,8 @@ export const viewport: Viewport = {
   themeColor: "#000000",
   width: "device-width",
   initialScale: 1,
-  viewportFit: "cover", // TRÈS IMPORTANT : ça dit à l'appli d'occuper TOUT l'écran
+  viewportFit: "cover",
 };
-
-
 
 export default function RootLayout({
   children,
@@ -40,7 +37,6 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    // On ajoute suppressHydrationWarning ici
     <html lang="fr" className="bg-black" style={{ backgroundColor: 'black' }} suppressHydrationWarning>
       <head>
         <script
@@ -55,10 +51,13 @@ export default function RootLayout({
           }}
         />
       </head>
-      {/* Et ici aussi par sécurité */}
-      <body suppressHydrationWarning className="bg-black antialiased" style={{ backgroundColor: 'black' }}>
-    
-        {children}
+      <body suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} bg-black antialiased text-white`} style={{ backgroundColor: 'black' }}>
+        
+        {/* On enveloppe ici : tout ce qui est dans l'appli passera par l'AuthProvider */}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
+
       </body>
     </html>
   );
