@@ -5,6 +5,7 @@ import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion' // Pour les animations
 import { useAuth } from './context/AuthContext'
+const { user } = useAuth()
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -70,10 +71,25 @@ export default function Home() {
     }
   }
 
-  const deleteTask = async (id: string) => {
-    await supabase.from('tasks').delete().eq('id', id)
+const deleteTask = async (id: string, taskName: string) => {
+  // 1. Suppression de la base de données
+  const { error } = await supabase.from('tasks').delete().eq('id', id)
+
+  if (!error) {
+    // 2. Mise à jour visuelle (on enlève la tâche de l'écran)
     setTasks(tasks.filter(t => t.id !== id))
+
+    // 3. ENREGISTREMENT DANS L'HISTORIQUE
+    await supabase.from('audit_logs').insert([{
+      user_name: user?.initials,
+      action: 'ARCHIVE',
+      target_name: taskName, // Le nom de la tâche supprimée
+      details: { category: 'mur' }
+    }])
+  } else {
+    alert("Erreur lors de l'archivage")
   }
+}
 
   return (
     <main className="min-h-screen bg-black text-white p-6 pt-[calc(env(safe-area-inset-top)+24px)] pb-32 font-sans">
@@ -129,11 +145,15 @@ export default function Home() {
                 </div>
 
                 <button 
-                  onClick={() => { if(confirm('Supprimer ?')) deleteTask(task.id) }}
-                  className="ml-4 p-2 text-zinc-700 hover:text-red-500 transition-colors"
-                >
-                  ✕
-                </button>
+  onClick={() => { 
+    if(confirm(`AArchiver "${task.display_name}" ?`)) {
+      deleteTask(task.id, task.display_name) 
+    }
+  }}
+  className="ml-4 p-2 text-zinc-700 hover:text-red-500 transition-colors"
+>
+  ✕
+</button>
               </motion.div>
             ))}
           </AnimatePresence>
