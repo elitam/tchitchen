@@ -3,178 +3,155 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { useAuth } from '../../context/AuthContext'
-
+import { useAuth } from '@/app/context/AuthContext'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
-const { user } = useAuth()
 
 export default function FicheRecette() {
   const params = useParams()
-  const id = params?.id as string // Force l'ID en string
+  const id = params?.id
   const router = useRouter()
+  const { user } = useAuth()
   
   const [recipe, setRecipe] = useState<any>(null)
   const [yieldInput, setYieldInput] = useState<number>(1)
-  const [error, setError] = useState<string | null>(null) // Pour traquer les erreurs
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!id) return
-
     const fetchRecipe = async () => {
-      // On récupère TOUT pour être sûr, mais on check les erreurs
-      const { data, error: sbError } = await supabase
-        .from('recipes')
-        .select('*')
-        .eq('id', id)
-        .single()
-
-      if (sbError) {
-        console.error("Erreur Supabase:", sbError)
-        setError(sbError.message)
-      } else if (data) {
-        setRecipe(data)
-        setYieldInput(data.base_yield || 1)
-      } else {
-        setError("Recette introuvable.")
+      try {
+        const { data, error } = await supabase
+          .from('recipes')
+          .select('*')
+          .eq('id', id)
+          .single()
+        
+        if (data) {
+          setRecipe(data)
+          setYieldInput(data.base_yield || 1)
+        }
+      } catch (err) {
+        console.error("Erreur de chargement", err)
+      } finally {
+        setLoading(false)
       }
     }
-
     fetchRecipe()
   }, [id])
 
-  // Gestion des états d'affichage
-  if (error) return (
-    <div className="min-h-screen bg-black text-white p-10">
-      <h1 className="text-red-500 font-bold">Erreur</h1>
-      <p className="text-zinc-500">{error}</p>
+  // État de chargement propre
+  if (loading) return (
+    <div className="min-h-screen bg-black flex items-center justify-center text-zinc-800 font-black italic">
+      TCHITCHEN...
+    </div>
+  )
+
+  // Si pas de recette trouvée
+  if (!recipe) return (
+    <div className="min-h-screen bg-black text-white p-10 text-center">
+      <p>Recette introuvable.</p>
       <button onClick={() => router.back()} className="mt-4 text-blue-500 underline">Retour</button>
     </div>
   )
 
-  if (!recipe) return (
-    <div className="min-h-screen bg-black flex items-center justify-center">
-      <p className="text-zinc-800 font-black italic animate-pulse">TCHITCHEN...</p>
-    </div>
-  )
-
-  // Calcule les bornes pour le slider
+  // Bornes du slider
   const minYield = Math.max(0.1, (recipe.base_yield || 1) * 0.1)
   const maxYield = (recipe.base_yield || 1) * 5
 
-  const deleteRecipe = async () => {
-    if (confirm("Supprimer la fiche ?")) {
-      await supabase.from('recipes').delete().eq('id', id)
-      router.push('/recettes')
-    }
-  }
-
   return (
     <main className="min-h-screen bg-black text-white font-sans overflow-x-hidden">
-      <style jsx global>{`
-        input[type='range'] { -webkit-appearance: none; background: transparent; }
-        input[type='range']::-webkit-slider-runnable-track { width: 100%; height: 2px; background: #1e1e1e; }
-        input[type='range']::-webkit-slider-thumb {
-          -webkit-appearance: none; height: 18px; width: 18px; border-radius: 50%;
-          background: #3b82f6; cursor: pointer; margin-top: -8px; 
-          border: 3px solid black; box-shadow: 0 0 0 1px #3b82f6;
-        }
-        .dotted-line { flex-grow: 1; border-bottom: 2px dotted #27272a; margin: 0 8px 6px 8px; }
-      `}</style>
-  {/* Image Header */}
-  <div className="relative w-full h-[35vh] bg-zinc-900">
-    {recipe.image_url && <img src={recipe.image_url} className="w-full h-full object-cover" alt="" />}
-    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-    
-    {/* BARRE D'ACTIONS - C'est ici que ça se passe */}
-    <div className="absolute top-0 w-full p-6 flex justify-between items-start pt-[calc(env(safe-area-inset-top)+10px)] z-50">
-      {/* Retour */}
-      <button onClick={() => router.back()} className="bg-black/40 backdrop-blur-md rounded-full p-2 border border-white/10">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="m15 18-6-6 6-6"/></svg>
-      </button>
-      
-      {/* Groupe d'actions à droite */}
-      <div className="flex gap-3">
-{user?.role === 'admin' && (
-    <>
-      <Link 
-          href={`/recettes/modifier/${id}`} 
-          className="bg-blue-600/80 backdrop-blur-md rounded-full p-2 border border-blue-400/20 shadow-lg"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
-          </svg>
-        </Link>
-
-      <button 
-          onClick={deleteRecipe} 
-          className="bg-black/40 backdrop-blur-md rounded-full p-2 border border-white/10 opacity-60 hover:opacity-100 transition-opacity"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-        </button>
-    </>
-  )}    
-      </div>
-    </div>
-
-    {/* Titre & Station */}
-    <div className="absolute bottom-6 left-6 right-6">
-      <h1 className="text-3xl font-black uppercase tracking-tight leading-none mb-1">{recipe.title}</h1>
-      <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em]">{recipe.station || 'GENERAL'}</p>
-    </div>
-  </div>
-<div className="p-8 space-y-12">
-  
-  {/* ON AFFICHE LE CALCULATEUR UNIQUEMENT POUR LA PRODUCTION */}
-  {recipe.category === 'production' && (
-    <div className="flex flex-col items-center space-y-4">
-      <div className="flex items-baseline gap-2">
-        <span className="text-5xl font-black text-blue-500 tracking-tighter">
-          {yieldInput.toFixed(recipe.unit === 'portion' ? 0 : 1)}
-        </span>
-        <span className="text-xl font-black text-blue-500/50 uppercase">{recipe.unit}</span>
-      </div>
-      <input type="range" min={minYield} max={maxYield} step={recipe.unit === 'portion' ? 1 : 0.1}
-        value={yieldInput} onChange={(e) => setYieldInput(Number(e.target.value))}
-        className="w-full"
-      />
-    </div>
-  )}
-
-  {/* ON AFFICHE LA MISE EN PLACE UNIQUEMENT POUR LA PRODUCTION */}
-  {recipe.category === 'production' && (
-    <div className="space-y-6">
-          <h2 className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.3em]">Mise en place</h2>
-          <div className="space-y-4">
-            {recipe.ingredients?.map((ing: any, index: number) => (
-              <div key={index} className="flex items-end text-lg">
-                <span className="text-zinc-400 font-bold">{ing.item}</span>
-                <div className="dotted-line" />
-                <span className="text-blue-500 font-mono font-bold">
-                  {((ing.qty / recipe.base_yield) * yieldInput).toFixed(recipe.unit === 'portion' ? 0 : 2)}
-                  <span className="ml-1 text-sm text-blue-500/50">{ing.unit}</span>
-                </span>
-              </div>
-            ))}
+      {/* Header avec Image */}
+      <div className="relative w-full h-[40vh] bg-zinc-900">
+        {recipe.image_url && (
+          <img src={recipe.image_url} className="w-full h-full object-cover" alt="" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+        
+        {/* Navigation bar */}
+        <div className="absolute top-0 w-full p-6 flex justify-between items-start pt-[calc(env(safe-area-inset-top)+10px)] z-50">
+          <button onClick={() => router.back()} className="bg-black/40 backdrop-blur-md rounded-full p-2 border border-white/10">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          
+          <div className="flex gap-3">
+            {/* On vérifie si l'user est ADMIN avant d'afficher les boutons modif/suppr */}
+            {user?.role === 'admin' && (
+              <>
+                <Link href={`/recettes/modifier/${id}`} className="bg-blue-600/80 backdrop-blur-md rounded-full p-2 shadow-lg">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                </Link>
+                <button onClick={async () => {
+                   if(confirm('Supprimer cette fiche ?')) {
+                     await supabase.from('recipes').delete().eq('id', id)
+                     router.push('/recettes')
+                   }
+                }} className="bg-black/40 backdrop-blur-md rounded-full p-2 border border-white/10">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                </button>
+              </>
+            )}
           </div>
-          </div>
-  )}
+        </div>
 
-  {/* PROCÉDÉ (PRODUCTION) OU COMPOSANTS (PASS) */}
-  <div className="space-y-6 pb-20">
-  <h2 className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.3em]">
-    {recipe.category === 'plating' ? 'Composants & Dressage' : 'Procédé'}
-  </h2>
-  <div className="text-zinc-400 leading-relaxed text-[17px] whitespace-pre-line">
-    {recipe.instructions || <span className="opacity-30 italic">Aucune instruction.</span>}
-  </div>
-</div>
-</div>
-      
-      
+        <div className="absolute bottom-6 left-6 right-6">
+          <h1 className="text-3xl font-black uppercase tracking-tight leading-none mb-1">{recipe.title || 'Sans titre'}</h1>
+          <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em]">{recipe.station || 'Général'}</p>
+        </div>
+      </div>
+
+      <div className="p-8 space-y-12">
+        {/* CALCULATEUR (Seulement pour Production) */}
+        {recipe.category === 'production' && (
+          <div className="flex flex-col items-center space-y-4">
+            <div className="flex items-baseline gap-2">
+              <span className="text-5xl font-black text-blue-500 tracking-tighter">
+                {yieldInput.toFixed(recipe.unit === 'portion' ? 0 : 1)}
+              </span>
+              <span className="text-xl font-black text-blue-500/50 uppercase">{recipe.unit || 'kg'}</span>
+            </div>
+            <input type="range" min={minYield} max={maxYield} step={0.1}
+              value={yieldInput} onChange={(e) => setYieldInput(Number(e.target.value))}
+              className="w-full accent-blue-500"
+            />
+          </div>
+        )}
+
+        {/* INGRÉDIENTS (Seulement pour Production) */}
+        {recipe.category === 'production' && recipe.ingredients && (
+          <div className="space-y-6">
+            <h2 className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.3em]">Mise en place</h2>
+            <div className="space-y-4">
+              {recipe.ingredients.map((ing: any, i: number) => {
+                const ratio = yieldInput / (recipe.base_yield || 1)
+                const calculatedQty = (ing.qty * ratio).toFixed(ing.qty * ratio < 10 ? 1 : 0)
+                return (
+                  <div key={i} className="flex justify-between items-end border-b border-zinc-900 pb-2">
+                    <span className="text-zinc-400 font-bold uppercase text-sm">{ing.item}</span>
+                    <div className="flex gap-1 items-baseline">
+                      <span className="text-white font-black">{calculatedQty}</span>
+                      <span className="text-zinc-600 text-[10px] font-bold lowercase">{ing.unit}</span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* PROCÉDÉ / COMPOSANTS */}
+        <div className="space-y-6 pb-20">
+          <h2 className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.3em]">
+            {recipe.category === 'plating' ? 'Composants & Dressage' : 'Procédé'}
+          </h2>
+          <div className="text-zinc-400 leading-relaxed text-[17px] whitespace-pre-line">
+            {recipe.instructions || "Aucune instruction."}
+          </div>
+        </div>
+      </div>
     </main>
   )
 }
