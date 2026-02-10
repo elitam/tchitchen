@@ -25,6 +25,8 @@ export default function Home() {
   const [allRecipes, setAllRecipes] = useState<any[]>([])
   const [suggestions, setSuggestions] = useState<any[]>([])
   const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null)
+  const [isShoppingListOpen, setIsShoppingListOpen] = useState(false);
+const [shoppingList, setShoppingList] = useState<any[]>([]);
 
 // 1. Charger les recettes de production au démarrage
 useEffect(() => {
@@ -64,6 +66,40 @@ const handleInputChange = (val: string) => {
     }
     fetchTasks()
   }, [])
+
+const generateShoppingList = async () => {
+  // 1. Trouver les IDs des recettes liées aux tâches "en cours"
+  const inProgressRecipeIds = tasks
+    .filter(t => t.status === 'in_progress' && t.recipe_id)
+    .map(t => t.recipe_id);
+
+  if (inProgressRecipeIds.length === 0) return;
+
+  // 2. Récupérer les ingrédients de ces recettes
+  const { data: recipes } = await supabase
+    .from('recipes')
+    .select('ingredients')
+    .in('id', inProgressRecipeIds);
+
+  if (!recipes) return;
+
+  // 3. Fusionner les ingrédients (Additionner les quantités si même nom + même unité)
+  const aggregated: Record<string, any> = {};
+
+  recipes.forEach(r => {
+    r.ingredients?.forEach((ing: any) => {
+      const key = `${ing.item}-${ing.unit}`.toLowerCase();
+      if (aggregated[key]) {
+        aggregated[key].qty += Number(ing.qty);
+      } else {
+        aggregated[key] = { ...ing, qty: Number(ing.qty) };
+      }
+    });
+  });
+
+  setShoppingList(Object.values(aggregated));
+  setIsShoppingListOpen(true);
+};
 
   // 1. AJOUTER UNE TÂCHE + LOG
   const addTask = async (e: React.FormEvent) => {
@@ -148,7 +184,23 @@ const handleInputChange = (val: string) => {
 
       {/* 2. LE MUR (ANIMATION ORIGINALE) */}
       <div className="space-y-6">
-        <h2 className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.3em]">Mise en place</h2>
+        <div className="flex justify-between items-center mb-6">
+  <h2 className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.3em]">Mise en place</h2>
+  
+  {/* BOUTON MARCHÉ / SHOPPING LIST */}
+  <button 
+    onClick={generateShoppingList}
+    disabled={!tasks.some(t => t.status === 'in_progress' && t.recipe_id)}
+    className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all ${
+      tasks.some(t => t.status === 'in_progress' && t.recipe_id)
+      ? 'bg-blue-500/10 border-blue-500/50 text-blue-400 animate-pulse'
+      : 'bg-zinc-900 border-zinc-800 text-zinc-700 opacity-50'
+    }`}
+  >
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M20 7H4M20 12H4M20 17H4"/></svg>
+    <span className="text-[10px] font-black uppercase">Le Marché</span>
+  </button>
+</div>
         
         <div className="space-y-3">
           <AnimatePresence mode="popLayout">
@@ -258,6 +310,50 @@ const handleInputChange = (val: string) => {
         <Link href="/recettes" className="text-zinc-600 text-xs font-black tracking-widest uppercase">Recettes</Link>
         <Link href="/historique" className="text-zinc-600 text-xs font-black tracking-widest uppercase">Historique</Link>
       </div>
+
+
+      {/* DRAWER SHOPPING LIST STYLE IPHONE */}
+<AnimatePresence>
+  {isShoppingListOpen && (
+    <>
+      <motion.div 
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        onClick={() => setIsShoppingListOpen(false)}
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150]"
+      />
+      <motion.div 
+        initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+        transition={{ type: "spring", damping: 25, stiffness: 200 }}
+        className="fixed bottom-0 left-0 right-0 bg-zinc-900 border-t border-zinc-800 rounded-t-[2.5rem] z-[160] max-h-[80vh] overflow-y-auto pb-10 shadow-2xl"
+      >
+        <div className="w-12 h-1.5 bg-zinc-800 rounded-full mx-auto mt-4 mb-8" />
+        
+        <div className="px-8">
+          <div className="flex justify-between items-center mb-8">
+            <h3 className="text-2xl font-black uppercase tracking-tight">Le Marché</h3>
+            <button onClick={() => setIsShoppingListOpen(false)} className="text-zinc-500 font-bold">OK</button>
+          </div>
+
+          <div className="space-y-4">
+            {shoppingList.map((ing, i) => (
+              <div key={i} className="flex justify-between items-center bg-zinc-800/50 p-4 rounded-2xl border border-zinc-700/30">
+                <span className="text-zinc-300 font-bold uppercase text-sm">{ing.item}</span>
+                <div className="flex gap-2 items-baseline">
+                  <span className="text-white font-black text-xl">{ing.qty}</span>
+                  <span className="text-zinc-500 text-[10px] font-black uppercase">{ing.unit}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {shoppingList.length === 0 && (
+            <p className="text-center text-zinc-600 italic py-10">Erreur lors de la génération...</p>
+          )}
+        </div>
+      </motion.div>
+    </>
+  )}
+</AnimatePresence>
     </main>
   );
 }
