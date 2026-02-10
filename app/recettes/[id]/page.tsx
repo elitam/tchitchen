@@ -64,45 +64,60 @@ export default function FicheRecette() {
 
   return (
     <main className="min-h-screen bg-black text-white font-sans overflow-x-hidden">
-      {/* Header avec Image */}
-      <div className="relative w-full h-[40vh] bg-zinc-900">
-        {recipe.image_url && (
-          <img src={recipe.image_url} className="w-full h-full object-cover" alt="" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-        
-        {/* Navigation bar */}
-        <div className="absolute top-0 w-full p-6 flex justify-between items-start pt-[calc(env(safe-area-inset-top)+10px)] z-50">
-          <button onClick={() => router.back()} className="bg-black/40 backdrop-blur-md rounded-full p-2 border border-white/10">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="m15 18-6-6 6-6"/></svg>
-          </button>
-          
-          <div className="flex gap-3">
-            {/* On vérifie si l'user est ADMIN avant d'afficher les boutons modif/suppr */}
-            {user?.role === 'admin' && (
-              <>
-                <Link href={`/recettes/modifier/${id}`} className="bg-blue-600/80 backdrop-blur-md rounded-full p-2 shadow-lg">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
-                </Link>
-                <button onClick={async () => {
-                   if(confirm('Supprimer cette fiche ?')) {
-                     await supabase.from('recipes').delete().eq('id', id)
-                     router.push('/recettes')
-                   }
-                }} className="bg-black/40 backdrop-blur-md rounded-full p-2 border border-white/10">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                </button>
-              </>
-            )}
-          </div>
-        </div>
+      {/* Header Adaptatif */}
+    <div className={`relative w-full transition-all duration-500 bg-zinc-900 ${
+      recipe.category === 'plating' ? 'h-[70vh]' : 'h-[40vh]'
+    }`}>
+      {recipe.image_url ? (
+        <img 
+          src={recipe.image_url} 
+          className="w-full h-full object-cover" 
+          alt={recipe.title} 
+        />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center text-6xl opacity-20">🍲</div>
+      )}
 
-        <div className="absolute bottom-6 left-6 right-6">
-          <h1 className="text-3xl font-black uppercase tracking-tight leading-none mb-1">{recipe.title || 'Sans titre'}</h1>
-          <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em]">{recipe.station || 'Général'}</p>
+      {/* Dégradé plus discret pour le Pass pour ne pas boucher l'image */}
+      <div className={`absolute inset-0 bg-gradient-to-t from-black ${
+        recipe.category === 'plating' ? 'via-black/10' : 'via-black/40'
+      } to-transparent`} />
+      
+      {/* Boutons de navigation (Back, Edit, Delete) */}
+      <div className="absolute top-0 w-full p-6 flex justify-between items-start pt-[calc(env(safe-area-inset-top)+10px)] z-50">
+        <button onClick={() => router.back()} className="bg-black/40 backdrop-blur-md rounded-full p-2 border border-white/10">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        
+        <div className="flex gap-3">
+          {user?.role === 'admin' && (
+            <>
+              <Link href={`/recettes/modifier/${id}`} className="bg-blue-600/80 backdrop-blur-md rounded-full p-2 shadow-lg">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+              </Link>
+              <button onClick={async () => {
+                 if(confirm('Supprimer cette fiche ?')) {
+                   await supabase.from('recipes').delete().eq('id', id)
+                   router.push('/recettes')
+                 }
+              }} className="bg-black/40 backdrop-blur-md rounded-full p-2 border border-white/10">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+              </button>
+            </>
+          )}
         </div>
       </div>
 
+      {/* Titre superposé en bas de l'image */}
+      <div className="absolute bottom-6 left-6 right-6">
+        <h1 className="text-3xl font-black uppercase tracking-tight leading-none mb-1 drop-shadow-lg">
+          {recipe.title}
+        </h1>
+        <p className="text-zinc-300 text-[10px] font-black uppercase tracking-[0.2em] drop-shadow-md">
+          {recipe.station || 'Le Pass'}
+        </p>
+      </div>
+    </div>
       <div className="p-8 space-y-12">
         {/* CALCULATEUR (Seulement pour Production) */}
         {recipe.category === 'production' && (
