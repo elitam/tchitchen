@@ -4,12 +4,13 @@ import { useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
 import useSWR from 'swr'
+import { useAuth } from '../context/AuthContext'
 
+const { user } = useAuth()
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
-
 // Le fetcher qui ne prend que le nécessaire pour les cartes
 const fetcher = async () => {
   const { data, error } = await supabase
@@ -96,12 +97,15 @@ export default function Recettes() {
         ))}
       </div>
 
-      <Link 
+
+{user?.role === 'admin' && (
+   <Link 
         href="/recettes/ajouter"
         className="fixed bottom-28 right-6 w-16 h-16 bg-white text-black rounded-full text-4xl shadow-2xl flex items-center justify-center active:scale-90 transition-transform z-40"
       >
         +
       </Link>
+)}
 
       {/* Navigation Basse */}
       <div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-xl border-t border-zinc-800 p-6 flex justify-around items-center z-50">

@@ -3,11 +3,14 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useAuth } from '../../context/AuthContext'
+
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
+const { user } = useAuth()
 
 export default function FicheRecette() {
   const params = useParams()
@@ -95,8 +98,9 @@ export default function FicheRecette() {
       
       {/* Groupe d'actions à droite */}
       <div className="flex gap-3">
-        {/* BOUTON MODIFIER (Crayon) */}
-        <Link 
+{user?.role === 'admin' && (
+    <>
+      <Link 
           href={`/recettes/modifier/${id}`} 
           className="bg-blue-600/80 backdrop-blur-md rounded-full p-2 border border-blue-400/20 shadow-lg"
         >
@@ -105,13 +109,14 @@ export default function FicheRecette() {
           </svg>
         </Link>
 
-        {/* BOUTON SUPPRIMER (Poubelle) */}
-        <button 
+      <button 
           onClick={deleteRecipe} 
           className="bg-black/40 backdrop-blur-md rounded-full p-2 border border-white/10 opacity-60 hover:opacity-100 transition-opacity"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
         </button>
+    </>
+  )}    
       </div>
     </div>
 
