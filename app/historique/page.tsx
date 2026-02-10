@@ -82,10 +82,10 @@ export default function HistoriquePage() {
 
       {/* Navigation Basse */}
       <div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-xl border-t border-zinc-800 p-6 flex justify-around items-center z-50">
-        <Link href="/" className="text-zinc-600 text-xs font-black tracking-widest uppercase">Accueil</Link>
-        <Link href="/recettes" className="text-zinc-600 text-xs font-black tracking-widest uppercase">Recettes</Link>
-        <button className="text-white text-xs font-black tracking-widest uppercase border-b-2 border-blue-500 pb-1">Historique</button>
-      </div>
+  <Link href="/" className="text-zinc-600 text-xs font-black tracking-widest uppercase">Accueil</Link>
+  <Link href="/recettes" className="text-zinc-600 text-xs font-black tracking-widest uppercase">Recettes</Link>
+  <button className="text-white text-xs font-black tracking-widest uppercase">Historique</button>
+</div>
     </main>
   )
 }

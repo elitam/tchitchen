@@ -180,11 +180,11 @@ const deleteTask = async (id: string, taskName: string) => {
         </div>
       )}
 
-      <div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-xl border-t border-zinc-800 p-6 flex justify-around items-center">
-        <button className="text-white text-xs font-black tracking-widest uppercase">Accueil</button>
-        <Link href="/recettes" className="text-zinc-600 text-xs font-black tracking-widest uppercase">Recettes</Link>
-        <button className="text-zinc-600 text-xs font-black tracking-widest uppercase opacity-50 pointer-events-none">Historique</button>
-      </div>
+      <div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-xl border-t border-zinc-800 p-6 flex justify-around items-center z-50">
+  <button className="text-white text-xs font-black tracking-widest uppercase">Accueil</button>
+  <Link href="/recettes" className="text-zinc-600 text-xs font-black tracking-widest uppercase">Recettes</Link>
+  <Link href="/historique" className="text-zinc-600 text-xs font-black tracking-widest uppercase">Historique</Link>
+</div>
     </main>
   )
 }
