@@ -38,34 +38,47 @@ export default function Home() {
     fetchTasks()
   }, [])
 
-  const toggleStatus = async (id: string, currentStatus: string) => {
-  const statusOrder = ['pending', 'in_progress', 'completed']
-  const nextStatus = statusOrder[(statusOrder.indexOf(currentStatus) + 1) % statusOrder.length]
+  const toggleStatus = async (id: string, currentStatus: string, taskName: string) => {
+    const statusOrder = ['pending', 'in_progress', 'completed']
+    const nextStatus = statusOrder[(statusOrder.indexOf(currentStatus) + 1) % statusOrder.length]
 
-  // 1. MISE À JOUR OPTIMISTE (Immédiate sur l'écran)
-  const updatedTasks = tasks.map(t => t.id === id ? { ...t, status: nextStatus } : t)
-  setTasks(sortTasks(updatedTasks))
+    // 1. Mise à jour visuelle (Optimiste)
+    const updatedTasks = tasks.map(t => t.id === id ? { ...t, status: nextStatus } : t)
+    setTasks(sortTasks(updatedTasks))
 
-  // 2. ENVOI DISCRET À SUPABASE (En arrière-plan)
-  const { error } = await supabase
-    .from('tasks')
-    .update({ status: nextStatus })
-    .eq('id', id)
+    // 2. Update Supabase
+    await supabase.from('tasks').update({ status: nextStatus }).eq('id', id)
 
-  if (error) {
-    // Si vraiment ça échoue, on recharge les vraies données
-    console.error("Erreur serveur, synchronisation...", error)
-    const { data } = await supabase.from('tasks').select('*')
-    setTasks(sortTasks(data || []))
+    // 3. LOG DE CHANGEMENT DANS L'HISTORIQUE
+    await supabase.from('audit_logs').insert([{
+      user_name: user?.initials,
+      action: 'STATUT',
+      target_name: `${taskName} (${STATUS_LABELS[nextStatus]})`,
+      details: { to: nextStatus }
+    }])
   }
-}
 
   const addTask = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newTaskName.trim()) return
-    const { data } = await supabase.from('tasks').insert([{ display_name: newTaskName, status: 'pending' }]).select()
+    
+    // 1. Insertion de la tâche
+    const { data } = await supabase
+      .from('tasks')
+      .insert([{ display_name: newTaskName, status: 'pending' }])
+      .select()
+
     if (data) {
       setTasks(sortTasks([data[0], ...tasks]))
+
+      // 2. LOG D'AJOUT DANS L'HISTORIQUE
+      await supabase.from('audit_logs').insert([{
+        user_name: user?.initials,
+        action: 'AJOUT TÂCHE',
+        target_name: newTaskName,
+        details: { category: 'mur' }
+      }])
+
       setNewTaskName('')
       setIsModalOpen(false)
     }
@@ -135,7 +148,8 @@ const deleteTask = async (id: string, taskName: string) => {
                   'bg-zinc-900 border-zinc-800'
                 }`}
               >
-                <div className="flex-1 cursor-pointer" onClick={() => toggleStatus(task.id, task.status)}>
+                <div className="flex-1 cursor-pointer" onClick={() => toggleStatus(task.id, task.status, task.display_name)} // <--- Ajoute task.display_name ici
+>
                   <p className={`text-xl font-bold ${task.status === 'completed' ? 'line-through text-zinc-600' : 'text-white'}`}>
                     {task.display_name}
                   </p>
