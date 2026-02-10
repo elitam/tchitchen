@@ -11,6 +11,7 @@ const supabase = createClient(
 )
 
 export default function FicheRecette() {
+  const [isZoomed, setIsZoomed] = useState(false)
   const params = useParams()
   const id = params?.id
   const router = useRouter()
@@ -68,6 +69,18 @@ export default function FicheRecette() {
     <div className={`relative w-full transition-all duration-500 bg-zinc-900 ${
       recipe.category === 'plating' ? 'h-[70vh]' : 'h-[40vh]'
     }`}>
+      onClick={() => recipe.image_url && setIsZoomed(true)} // Ouvre au clic
+  className={`relative w-full transition-all duration-500 bg-zinc-900 cursor-zoom-in ${
+    recipe.category === 'plating' ? 'h-[70vh]' : 'h-[40vh]'
+  }`}
+
+  {recipe.image_url && (
+    <img 
+      src={recipe.image_url} 
+      className="w-full h-full object-cover" 
+      alt="" 
+    />
+  )}
       {recipe.image_url ? (
         <img 
           src={recipe.image_url} 
@@ -167,6 +180,26 @@ export default function FicheRecette() {
           </div>
         </div>
       </div>
+
+{/* MODAL PLEIN ÉCRAN (ZOOM) */}
+{isZoomed && (
+  <div 
+    className="fixed inset-0 z-[100] bg-black flex items-center justify-center p-4 animate-in fade-in duration-300"
+    onClick={() => setIsZoomed(false)} // Ferme au clic n'importe où
+  >
+    {/* Bouton Fermer discret */}
+    <button className="absolute top-[calc(env(safe-area-inset-top)+10px)] right-6 text-white/50 text-xs font-black uppercase tracking-widest z-10">
+      Fermer
+    </button>
+    
+    <img 
+      src={recipe.image_url} 
+      className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+      alt="Plein écran"
+    />
+  </div>
+)}
+
     </main>
   )
 }
