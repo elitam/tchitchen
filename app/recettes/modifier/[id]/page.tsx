@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { useRouter, useParams } from 'next/navigation'
+import { useAuth } from '../../../context/AuthContext'
+
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
