@@ -71,7 +71,7 @@ export default function Recettes() {
 {/* État de chargement visuel */}
         {!recipes && (
           <div className="col-span-2 py-20 text-center text-zinc-800 font-black italic animate-pulse">
-            CHARGEMENT DE LA BRIGADE...
+            CHARGEMENT...
           </div>
         )}
 

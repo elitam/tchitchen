@@ -10,11 +10,13 @@ const supabase = createClient(
 
 export default function ModifierRecette() {
   const router = useRouter()
-  const { id } = useParams()
+  const params = useParams()
+  const id = params?.id as string
+
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(true)
   
-  // États
+  // États de la fiche
   const [title, setTitle] = useState('')
   const [category, setCategory] = useState<'production' | 'plating'>('production')
   const [station, setStation] = useState('')
@@ -24,10 +26,17 @@ export default function ModifierRecette() {
   const [image, setImage] = useState<string | null>(null)
   const [ingredients, setIngredients] = useState([{ item: '', qty: 0, unit: 'g' }])
 
-  // 1. CHARGEMENT DES DONNÉES
+  // 1. CHARGEMENT DES DONNÉES EXISTANTES
   useEffect(() => {
+    if (!id) return
+
     const fetchRecipe = async () => {
-      const { data, error } = await supabase.from('recipes').select('*').eq('id', id).single()
+      const { data, error } = await supabase
+        .from('recipes')
+        .select('*')
+        .eq('id', id)
+        .single()
+
       if (data) {
         setTitle(data.title)
         setCategory(data.category || 'production')
@@ -43,45 +52,74 @@ export default function ModifierRecette() {
     fetchRecipe()
   }, [id])
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // 2. GESTION DE LA PHOTO (Upload vers bucket photos-recettes)
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => setImage(reader.result as string)
-      reader.readAsDataURL(file)
+    if (!file) return
+
+    setLoading(true)
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${Date.now()}.${fileExt}`
+
+    const { error: uploadError } = await supabase.storage
+      .from('photos-recettes')
+      .upload(fileName, file)
+
+    if (uploadError) {
+      alert("Erreur upload: " + uploadError.message)
+      setLoading(false)
+      return
     }
+
+    const { data } = supabase.storage.from('photos-recettes').getPublicUrl(fileName)
+    setImage(data.publicUrl)
+    setLoading(false)
   }
 
+  const updateIngredient = (index: number, field: string, value: any) => {
+    const newIngs = [...ingredients]
+    newIngs[index] = { ...newIngs[index], [field]: value }
+    setIngredients(newIngs)
+  }
+
+  // 3. MISE À JOUR DANS LA BASE
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
-    const { error } = await supabase.from('recipes').update({
-      title, 
-      category, 
-      station, 
-      base_yield: category === 'production' ? baseYield : 1, // On reset si c'est le pass
-      unit: category === 'production' ? unit : 'fiche',
-      ingredients: category === 'production' ? ingredients : [], // On vide les ingrédients si c'est le pass
-      instructions, 
-      image_url: image
-    }).eq('id', id)
+    const { error } = await supabase
+      .from('recipes')
+      .update({
+        title,
+        category,
+        station,
+        base_yield: category === 'production' ? baseYield : 1,
+        unit: category === 'production' ? unit : 'fiche',
+        ingredients: category === 'production' ? ingredients : [],
+        instructions,
+        image_url: image
+      })
+      .eq('id', id)
 
-    if (error) { 
-      alert(error.message)
-      setLoading(false) 
-    } else { 
-      router.push(`/recettes/${id}`) 
+    if (error) {
+      alert("Erreur: " + error.message)
+      setLoading(false)
+    } else {
+      router.push(`/recettes/${id}`)
     }
   }
 
-  if (fetching) return <div className="p-10 text-zinc-800 font-black italic tracking-tighter">CHARGEMENT...</div>
+  if (fetching) return (
+    <div className="min-h-screen bg-black flex items-center justify-center">
+      <p className="text-zinc-800 font-black italic animate-pulse">CHARGEMENT DE LA FICHE...</p>
+    </div>
+  )
 
   return (
     <main className="min-h-screen bg-black text-white p-6 pb-32 pt-[calc(env(safe-area-inset-top)+20px)] font-sans overflow-x-hidden">
       <div className="flex justify-between items-center mb-10">
-        <h1 className="text-3xl font-black tracking-tighter uppercase">Modifier la fiche</h1>
-        <button onClick={() => router.back()} className="text-zinc-500 font-bold text-xs uppercase">Annuler</button>
+        <h1 className="text-3xl font-black tracking-tighter uppercase">Modifier</h1>
+        <button onClick={() => router.back()} className="text-zinc-500 font-bold text-xs uppercase underline underline-offset-4">Annuler</button>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-10">
@@ -89,118 +127,92 @@ export default function ModifierRecette() {
         <input 
           required 
           type="text" 
-          placeholder="NOM DE LA RECETTE" 
           value={title} 
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full bg-transparent border-b border-zinc-800 py-2 text-3xl font-black uppercase outline-none focus:border-blue-500 transition-colors"
+          className="w-full bg-transparent border-b border-zinc-900 py-2 text-3xl font-black uppercase outline-none focus:border-blue-500 transition-colors"
         />
 
-        {/* PHOTO SECTION (Juste après le titre comme demandé) */}
+        {/* PHOTO */}
         <div>
-          <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest block mb-4">Photo de la fiche</label>
           <label className="relative flex flex-col items-center justify-center w-full h-56 bg-zinc-900 border-2 border-dashed border-zinc-800 rounded-[2rem] overflow-hidden cursor-pointer active:scale-95 transition-transform">
-            {image ? <img src={image} className="w-full h-full object-cover" alt="" /> : <span className="text-4xl">📸</span>}
-            <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+            {image ? (
+              <img src={image} className="w-full h-full object-cover" alt="" />
+            ) : (
+              <span className="text-4xl">{loading ? '⌛' : '📸'}</span>
+            )}
+            <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" disabled={loading} />
           </label>
         </div>
 
-        {/* CONFIGURATION */}
+        {/* CONFIG */}
         <div className="space-y-6">
-          <div>
-            <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest block mb-2">Type de fiche</label>
-            <select 
-              value={category} 
-              onChange={(e:any) => setCategory(e.target.value)}
-              className="w-full bg-zinc-900 p-4 rounded-2xl border border-zinc-800 outline-none text-sm font-bold appearance-none"
-            >
-              <option value="production">📦 PRODUCTION (Calculs activés)</option>
-              <option value="plating">🍽️ LE PASS (Photo + Texte seul)</option>
-            </select>
-          </div>
+          <select 
+            value={category} 
+            onChange={(e:any) => setCategory(e.target.value)}
+            className="w-full bg-zinc-900 p-4 rounded-2xl border border-zinc-800 outline-none text-sm font-bold appearance-none text-blue-400"
+          >
+            <option value="production">📦 PRODUCTION</option>
+            <option value="plating">🍽️ LE PASS / DRESSAGE</option>
+          </select>
           
-          <div>
-            <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest block mb-2">Station</label>
-            <input 
-              type="text" 
-              placeholder="STATION" 
-              value={station} 
-              onChange={(e) => setStation(e.target.value)}
-              className="w-full bg-zinc-900 p-4 rounded-2xl border border-zinc-800 outline-none text-sm font-bold uppercase"
-            />
-          </div>
+          <input 
+            type="text" placeholder="STATION" value={station} 
+            onChange={(e) => setStation(e.target.value)}
+            className="w-full bg-zinc-900 p-4 rounded-2xl border border-zinc-800 outline-none text-sm font-bold uppercase"
+          />
 
-          {/* CHAMPS RENDEMENT : Masqués si "Le Pass" */}
           {category === 'production' && (
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-[10px] font-black text-zinc-600 uppercase mb-2 block">Rendement base</label>
-                <input 
-                  type="number" step="0.1" value={baseYield} 
-                  onFocus={(e) => e.target.select()} 
-                  onChange={(e) => setBaseYield(Number(e.target.value))}
-                  className="w-full bg-zinc-900 p-4 rounded-2xl border border-zinc-800 outline-none text-xl font-black text-blue-500"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] font-black text-zinc-600 uppercase mb-2 block">Unité</label>
-                <input 
-                  type="text" placeholder="kg, L..." value={unit} 
-                  onChange={(e) => setUnit(e.target.value)}
-                  className="w-full bg-zinc-900 p-4 rounded-2xl border border-zinc-800 outline-none text-xl font-black uppercase"
-                />
-              </div>
+              <input 
+                type="number" step="0.1" value={baseYield} 
+                onFocus={(e) => e.target.select()} 
+                onChange={(e) => setBaseYield(Number(e.target.value))}
+                className="w-full bg-zinc-900 p-4 rounded-2xl border border-zinc-800 outline-none text-xl font-black text-blue-500"
+              />
+              <input 
+                type="text" placeholder="UNITÉ" value={unit} 
+                onChange={(e) => setUnit(e.target.value)}
+                className="w-full bg-zinc-900 p-4 rounded-2xl border border-zinc-800 outline-none text-xl font-black uppercase text-zinc-400"
+              />
             </div>
           )}
         </div>
 
-        {/* INGRÉDIENTS : Masqués si "Le Pass" */}
+        {/* INGRÉDIENTS (Cachés si Plating) */}
         {category === 'production' && (
           <div className="space-y-4">
-            <h2 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.3em]">Mise en place</h2>
+            <h2 className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.3em]">Mise en place</h2>
             <div className="space-y-3">
               {ingredients.map((ing, index) => (
                 <div key={index} className="grid grid-cols-[1fr_75px_65px_30px] gap-2 items-center">
-                  <input type="text" placeholder="Item" value={ing.item} onChange={(e) => {
-                    const n = [...ingredients]; n[index].item = e.target.value; setIngredients(n);
-                  }} className="bg-zinc-900 p-3 rounded-xl border border-zinc-800 outline-none text-sm font-bold" />
-                  
-                  <input type="number" step="0.1" value={ing.qty} onFocus={(e) => e.target.select()} onChange={(e) => {
-                    const n = [...ingredients]; n[index].qty = Number(e.target.value); setIngredients(n);
-                  }} className="bg-zinc-900 p-3 rounded-xl border border-zinc-800 outline-none text-sm text-center text-blue-400 font-bold" />
-                  
-                  <input type="text" value={ing.unit} onChange={(e) => {
-                    const n = [...ingredients]; n[index].unit = e.target.value; setIngredients(n);
-                  }} className="bg-zinc-900 p-3 rounded-xl border border-zinc-800 outline-none text-sm text-center font-bold lowercase" />
-                  
+                  <input type="text" placeholder="Item" value={ing.item} onChange={(e) => updateIngredient(index, 'item', e.target.value)}
+                    className="bg-zinc-900 p-3 rounded-xl border border-zinc-800 outline-none text-sm font-bold" />
+                  <input type="number" step="0.1" value={ing.qty} onFocus={(e) => e.target.select()} onChange={(e) => updateIngredient(index, 'qty', Number(e.target.value))}
+                    className="bg-zinc-900 p-3 rounded-xl border border-zinc-800 outline-none text-sm text-center text-blue-400 font-bold" />
+                  <input type="text" value={ing.unit} onChange={(e) => updateIngredient(index, 'unit', e.target.value)}
+                    className="bg-zinc-900 p-3 rounded-xl border border-zinc-800 outline-none text-sm text-center font-bold lowercase" />
                   <button type="button" onClick={() => setIngredients(ingredients.filter((_, i) => i !== index))} className="text-zinc-800 text-xl">✕</button>
                 </div>
               ))}
             </div>
             <button type="button" onClick={() => setIngredients([...ingredients, { item: '', qty: 0, unit: 'g' }])}
-              className="w-full py-4 border border-zinc-800 rounded-2xl text-zinc-600 text-[10px] font-black uppercase tracking-widest"
-            >+ AJOUTER UN ÉLÉMENT</button>
+              className="w-full py-4 border border-zinc-800 rounded-2xl text-zinc-700 text-[10px] font-black uppercase tracking-widest"
+            >+ Ajouter un ingrédient</button>
           </div>
         )}
 
-        {/* TEXTE LIBRE (Instructions ou Composants) */}
+        {/* TEXTE LIBRE */}
         <div className="space-y-4">
-          <label className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.3em] block">
+          <label className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.3em] block">
             {category === 'plating' ? 'Composants du dressage' : 'Procédé de fabrication'}
           </label>
-          <textarea 
-            rows={8} 
-            placeholder={category === 'plating' ? 'Listez ici les éléments du plat...' : 'Étapes de la recette...'} 
-            value={instructions} 
-            onChange={(e) => setInstructions(e.target.value)}
+          <textarea rows={10} placeholder="..." value={instructions} onChange={(e) => setInstructions(e.target.value)}
             className="w-full bg-zinc-900 p-5 rounded-[2rem] border border-zinc-800 outline-none text-md leading-relaxed"
           />
         </div>
 
-        <button 
-          disabled={loading} 
-          className="w-full bg-blue-600 text-white py-6 rounded-[2rem] font-black uppercase tracking-widest active:scale-95 transition-transform shadow-xl shadow-blue-500/20"
-        >
-          {loading ? 'MISE À JOUR...' : 'ENREGISTRER LES MODIFICATIONS'}
+        <button disabled={loading} className="w-full bg-blue-600 text-white py-6 rounded-[2rem] font-black uppercase tracking-widest active:scale-95 transition-transform shadow-xl shadow-blue-500/20 disabled:opacity-50">
+          {loading ? 'SYNCHRONISATION...' : 'METTRE À JOUR LA FICHE'}
         </button>
       </form>
     </main>
