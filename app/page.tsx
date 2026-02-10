@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion' // Pour les animations
-import { useAuth } from './context/AuthContext'
-const { user } = useAuth()
+import { useAuth } from '@/app/context/AuthContext'
+
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
