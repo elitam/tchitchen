@@ -191,38 +191,67 @@ export default function ModifierRecette() {
           )}
         </div>
 
-        {/* INGRÉDIENTS */}
-        {category === 'production' && (
-          <div className="space-y-4">
-            <h2 className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.3em]">Mise en place</h2>
-            <div className="space-y-3">
-              {ingredients.map((ing, index) => (
-                <div key={index} className="grid grid-cols-[1fr_75px_65px_30px] gap-2 items-center">
-                  <input type="text" placeholder="Item" value={ing.item} 
-                    onFocus={(e) => e.target.select()}
-                    onChange={(e) => updateIngredient(index, 'item', e.target.value)}
-                    autoComplete="on" autoCorrect="on"
-                    className="bg-zinc-900 p-3 rounded-xl border border-zinc-800 outline-none text-sm font-bold" />
-                  
-                  <input type="number" step="0.1" value={ing.qty} 
-                    onFocus={(e) => e.target.select()} 
-                    onChange={(e) => updateIngredient(index, 'qty', Number(e.target.value))}
-                    className="bg-zinc-900 p-3 rounded-xl border border-zinc-800 outline-none text-sm text-center text-blue-400 font-bold" />
-                  
-                  <input type="text" value={ing.unit} 
-                    onFocus={(e) => e.target.select()}
-                    onChange={(e) => updateIngredient(index, 'unit', e.target.value)}
-                    className="bg-zinc-900 p-3 rounded-xl border border-zinc-800 outline-none text-sm text-center font-bold lowercase" />
-                  
-                  <button type="button" onClick={() => setIngredients(ingredients.filter((_, i) => i !== index))} className="text-zinc-800 text-xl">✕</button>
-                </div>
-              ))}
-            </div>
-            <button type="button" onClick={() => setIngredients([...ingredients, { item: '', qty: 0, unit: 'g' }])}
-              className="w-full py-4 border border-zinc-800 rounded-2xl text-zinc-700 text-[10px] font-black uppercase tracking-widest"
-            >+ Ajouter un ingrédient</button>
-          </div>
-        )}
+        {/* INGRÉDIENTS - VERSION AUTO-RESPONSIVE */}
+<div className="space-y-4">
+  <h2 className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.3em]">Mise en place</h2>
+  <div className="space-y-3">
+    {ingredients.map((ing, index) => (
+      <div 
+        key={index} 
+        className="grid grid-cols-[1fr_65px_55px_25px] gap-2 items-center"
+      >
+        {/* 1. NOM : Prend tout l'espace restant (1fr) */}
+        <input 
+          type="text" 
+          placeholder="Item" 
+          value={ing.item} 
+          onFocus={(e) => e.target.select()}
+          onChange={(e) => updateIngredient(index, 'item', e.target.value)}
+          autoComplete="on" autoCorrect="on"
+          className="bg-zinc-900 p-3 rounded-xl border border-zinc-800 outline-none text-sm font-bold min-w-0" 
+        />
+        
+        {/* 2. QTÉ : Largeur réduite à 65px */}
+        <input 
+          type="number" 
+          step="0.1" 
+          value={ing.qty} 
+          onFocus={(e) => e.target.select()} 
+          onChange={(e) => updateIngredient(index, 'qty', Number(e.target.value))}
+          className="bg-zinc-900 p-3 rounded-xl border border-zinc-800 outline-none text-sm text-center text-blue-400 font-bold" 
+        />
+        
+        {/* 3. UNITÉ : Largeur réduite à 55px */}
+        <input 
+          type="text" 
+          value={ing.unit} 
+          onFocus={(e) => e.target.select()}
+          onChange={(e) => updateIngredient(index, 'unit', e.target.value)}
+          className="bg-zinc-900 p-3 rounded-xl border border-zinc-800 outline-none text-sm text-center font-bold lowercase" 
+        />
+        
+        {/* 4. LE X : Parfaitement aligné à droite */}
+        <button 
+          type="button" 
+          onClick={() => setIngredients(ingredients.filter((_, i) => i !== index))} 
+          className="text-zinc-700 hover:text-red-500 transition-colors flex justify-center items-center"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    ))}
+  </div>
+  
+  <button 
+    type="button" 
+    onClick={() => setIngredients([...ingredients, { item: '', qty: 0, unit: 'g' }])}
+    className="w-full py-4 border border-zinc-800 rounded-2xl text-zinc-700 text-[10px] font-black uppercase tracking-widest active:bg-zinc-900"
+  >
+    + Ajouter un ingrédient
+  </button>
+</div>
 
         {/* TEXTE LIBRE */}
         <div className="space-y-4">
