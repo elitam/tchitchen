@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/app/context/AuthContext'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,14 +22,12 @@ export default function AjouterRecette() {
   const [image, setImage] = useState<string | null>(null)
   const [ingredients, setIngredients] = useState([{ item: '', qty: 0, unit: 'g' }])
 
-  // Gestion de l'Upload vers ton bucket "photos-recettes"
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-
     setLoading(true)
     const fileExt = file.name.split('.').pop()
-    const fileName = `${Date.now()}.${fileExt}` // Nom unique
+    const fileName = `${Date.now()}.${fileExt}`
 
     const { error: uploadError } = await supabase.storage
       .from('photos-recettes')
@@ -77,13 +76,23 @@ export default function AjouterRecette() {
   return (
     <main className="min-h-screen bg-black text-white p-6 pb-32 pt-[calc(env(safe-area-inset-top)+20px)] font-sans overflow-x-hidden">
       <div className="flex justify-between items-center mb-10">
-        <h1 className="text-3xl font-black tracking-tighter uppercase">Nouvelle Fiche</h1>
+        <h1 className="text-3xl font-black tracking-tighter uppercase text-zinc-500">Nouvelle Fiche</h1>
         <button onClick={() => router.back()} className="text-zinc-500 font-bold text-xs uppercase underline underline-offset-4">Annuler</button>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-10">
-        <input required type="text" placeholder="NOM DE LA RECETTE" value={title} onChange={(e) => setTitle(e.target.value)}
-          className="w-full bg-transparent border-b border-zinc-900 py-2 text-3xl font-black uppercase outline-none focus:border-blue-500 transition-colors"
+        {/* TITRE - OPTIMISÉ */}
+        <input 
+          required 
+          type="text" 
+          placeholder="Nom de la recette" 
+          value={title} 
+          onFocus={(e) => e.target.select()}
+          onChange={(e) => setTitle(e.target.value)}
+          autoComplete="on"
+          autoCorrect="on"
+          spellCheck="true"
+          className="w-full bg-transparent border-b border-zinc-900 py-2 text-3xl font-black outline-none focus:border-blue-500 transition-colors"
         />
 
         {/* PHOTO SECTION */}
@@ -112,35 +121,59 @@ export default function AjouterRecette() {
             <option value="plating">🍽️ LE PASS / DRESSAGE</option>
           </select>
           
-          <input type="text" placeholder="STATION" value={station} onChange={(e) => setStation(e.target.value)}
+          <input 
+            type="text" 
+            placeholder="STATION" 
+            value={station} 
+            onFocus={(e) => e.target.select()}
+            onChange={(e) => setStation(e.target.value)}
+            autoComplete="on"
             className="w-full bg-zinc-900 p-4 rounded-2xl border border-zinc-800 outline-none text-sm font-bold uppercase"
           />
 
           {category === 'production' && (
             <div className="grid grid-cols-2 gap-4">
-              <input type="number" step="0.1" value={baseYield} onFocus={(e) => e.target.select()} onChange={(e) => setBaseYield(Number(e.target.value))}
+              <input 
+                type="number" step="0.1" value={baseYield} 
+                onFocus={(e) => e.target.select()} 
+                onChange={(e) => setBaseYield(Number(e.target.value))}
                 className="w-full bg-zinc-900 p-4 rounded-2xl border border-zinc-800 outline-none text-xl font-black text-blue-500"
               />
-              <input type="text" placeholder="UNITÉ" value={unit} onChange={(e) => setUnit(e.target.value)}
+              <input 
+                type="text" 
+                placeholder="UNITÉ" 
+                value={unit} 
+                onFocus={(e) => e.target.select()}
+                onChange={(e) => setUnit(e.target.value)}
                 className="w-full bg-zinc-900 p-4 rounded-2xl border border-zinc-800 outline-none text-xl font-black uppercase text-zinc-400"
               />
             </div>
           )}
         </div>
 
-        {/* INGRÉDIENTS (Cachés si Plating) */}
+        {/* INGRÉDIENTS */}
         {category === 'production' && (
           <div className="space-y-4">
             <h2 className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.3em]">Mise en place</h2>
             <div className="space-y-3">
               {ingredients.map((ing, index) => (
                 <div key={index} className="grid grid-cols-[1fr_75px_65px_30px] gap-2 items-center">
-                  <input type="text" placeholder="Item" value={ing.item} onChange={(e) => updateIngredient(index, 'item', e.target.value)}
+                  <input type="text" placeholder="Item" value={ing.item} 
+                    onFocus={(e) => e.target.select()}
+                    onChange={(e) => updateIngredient(index, 'item', e.target.value)}
+                    autoComplete="on" autoCorrect="on"
                     className="bg-zinc-900 p-3 rounded-xl border border-zinc-800 outline-none text-sm font-bold" />
-                  <input type="number" step="0.1" value={ing.qty} onFocus={(e) => e.target.select()} onChange={(e) => updateIngredient(index, 'qty', Number(e.target.value))}
+                  
+                  <input type="number" step="0.1" value={ing.qty} 
+                    onFocus={(e) => e.target.select()} 
+                    onChange={(e) => updateIngredient(index, 'qty', Number(e.target.value))}
                     className="bg-zinc-900 p-3 rounded-xl border border-zinc-800 outline-none text-sm text-center text-blue-400 font-bold" />
-                  <input type="text" value={ing.unit} onChange={(e) => updateIngredient(index, 'unit', e.target.value)}
+                  
+                  <input type="text" value={ing.unit} 
+                    onFocus={(e) => e.target.select()}
+                    onChange={(e) => updateIngredient(index, 'unit', e.target.value)}
                     className="bg-zinc-900 p-3 rounded-xl border border-zinc-800 outline-none text-sm text-center font-bold lowercase" />
+                  
                   <button type="button" onClick={() => setIngredients(ingredients.filter((_, i) => i !== index))} className="text-zinc-800 text-xl">✕</button>
                 </div>
               ))}

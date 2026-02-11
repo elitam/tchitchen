@@ -5,8 +5,6 @@ import { useRouter, useParams } from 'next/navigation'
 import { useAuth } from '@/app/context/AuthContext'
 import { useSearchParams } from 'next/navigation'
 
-
-
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -16,11 +14,12 @@ export default function ModifierRecette() {
   const router = useRouter()
   const params = useParams()
   const id = params?.id as string
+  const searchParams = useSearchParams()
+  const from = searchParams.get('from')
 
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(true)
   
-  // États de la fiche
   const [title, setTitle] = useState('')
   const [category, setCategory] = useState<'production' | 'plating'>('production')
   const [station, setStation] = useState('')
@@ -29,15 +28,11 @@ export default function ModifierRecette() {
   const [instructions, setInstructions] = useState('')
   const [image, setImage] = useState<string | null>(null)
   const [ingredients, setIngredients] = useState([{ item: '', qty: 0, unit: 'g' }])
-  const searchParams = useSearchParams()
-const from = searchParams.get('from')
 
-  // 1. CHARGEMENT DES DONNÉES EXISTANTES
   useEffect(() => {
     if (!id) return
-
     const fetchRecipe = async () => {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('recipes')
         .select('*')
         .eq('id', id)
@@ -58,15 +53,12 @@ const from = searchParams.get('from')
     fetchRecipe()
   }, [id])
 
-  // 2. GESTION DE LA PHOTO (Upload vers bucket photos-recettes)
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-
     setLoading(true)
     const fileExt = file.name.split('.').pop()
     const fileName = `${Date.now()}.${fileExt}`
-
     const { error: uploadError } = await supabase.storage
       .from('photos-recettes')
       .upload(fileName, file)
@@ -76,7 +68,6 @@ const from = searchParams.get('from')
       setLoading(false)
       return
     }
-
     const { data } = supabase.storage.from('photos-recettes').getPublicUrl(fileName)
     setImage(data.publicUrl)
     setLoading(false)
@@ -88,7 +79,6 @@ const from = searchParams.get('from')
     setIngredients(newIngs)
   }
 
-  // 3. MISE À JOUR DANS LA BASE
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -111,8 +101,6 @@ const from = searchParams.get('from')
       alert("Erreur: " + error.message)
       setLoading(false)
     } else {
-      // ✅ UNE SEULE REDIRECTION ICI
-      // On construit le chemin intelligemment
       const nextPath = `/recettes/${id}${from === 'pass' ? '?from=pass' : ''}`
       router.replace(nextPath)
     }
@@ -120,25 +108,39 @@ const from = searchParams.get('from')
 
   if (fetching) return (
     <div className="min-h-screen bg-black flex items-center justify-center">
-      <p className="text-zinc-800 font-black italic animate-pulse">CHARGEMENT DE LA FICHE...</p>
+      <p className="text-zinc-800 font-black italic animate-pulse">CHARGEMENT...</p>
     </div>
   )
 
   return (
     <main className="min-h-screen bg-black text-white p-6 pb-32 pt-[calc(env(safe-area-inset-top)+20px)] font-sans overflow-x-hidden">
       <div className="flex justify-between items-center mb-10">
-        <h1 className="text-3xl font-black tracking-tighter uppercase">Modifier</h1>
-        <button onClick={() => router.back()} className="text-zinc-500 font-bold text-xs uppercase underline underline-offset-4">Annuler</button>
+        <h1 className="text-3xl font-black tracking-tighter uppercase text-zinc-500">Modifier</h1>
+        <button 
+          type="button"
+          onClick={() => {
+            const backPath = `/recettes/${id}${from === 'pass' ? '?from=pass' : ''}`
+            router.replace(backPath)
+          }} 
+          className="text-zinc-500 font-bold text-xs uppercase underline underline-offset-4"
+        >
+          Annuler
+        </button>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-10">
-        {/* TITRE */}
+        {/* TITRE - ACCENTS OK + AUTO-SELECT */}
         <input 
           required 
           type="text" 
           value={title} 
+          onFocus={(e) => e.target.select()}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full bg-transparent border-b border-zinc-900 py-2 text-3xl font-black uppercase outline-none focus:border-blue-500 transition-colors"
+          autoComplete="on"
+          autoCorrect="on"
+          spellCheck="true"
+          className="w-full bg-transparent border-b border-zinc-900 py-2 text-3xl font-black outline-none focus:border-blue-500 transition-colors"
+          placeholder="Nom de la recette"
         />
 
         {/* PHOTO */}
@@ -166,6 +168,7 @@ const from = searchParams.get('from')
           
           <input 
             type="text" placeholder="STATION" value={station} 
+            onFocus={(e) => e.target.select()}
             onChange={(e) => setStation(e.target.value)}
             className="w-full bg-zinc-900 p-4 rounded-2xl border border-zinc-800 outline-none text-sm font-bold uppercase"
           />
@@ -180,6 +183,7 @@ const from = searchParams.get('from')
               />
               <input 
                 type="text" placeholder="UNITÉ" value={unit} 
+                onFocus={(e) => e.target.select()}
                 onChange={(e) => setUnit(e.target.value)}
                 className="w-full bg-zinc-900 p-4 rounded-2xl border border-zinc-800 outline-none text-xl font-black uppercase text-zinc-400"
               />
@@ -187,19 +191,29 @@ const from = searchParams.get('from')
           )}
         </div>
 
-        {/* INGRÉDIENTS (Cachés si Plating) */}
+        {/* INGRÉDIENTS */}
         {category === 'production' && (
           <div className="space-y-4">
             <h2 className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.3em]">Mise en place</h2>
             <div className="space-y-3">
               {ingredients.map((ing, index) => (
                 <div key={index} className="grid grid-cols-[1fr_75px_65px_30px] gap-2 items-center">
-                  <input type="text" placeholder="Item" value={ing.item} onChange={(e) => updateIngredient(index, 'item', e.target.value)}
+                  <input type="text" placeholder="Item" value={ing.item} 
+                    onFocus={(e) => e.target.select()}
+                    onChange={(e) => updateIngredient(index, 'item', e.target.value)}
+                    autoComplete="on" autoCorrect="on"
                     className="bg-zinc-900 p-3 rounded-xl border border-zinc-800 outline-none text-sm font-bold" />
-                  <input type="number" step="0.1" value={ing.qty} onFocus={(e) => e.target.select()} onChange={(e) => updateIngredient(index, 'qty', Number(e.target.value))}
+                  
+                  <input type="number" step="0.1" value={ing.qty} 
+                    onFocus={(e) => e.target.select()} 
+                    onChange={(e) => updateIngredient(index, 'qty', Number(e.target.value))}
                     className="bg-zinc-900 p-3 rounded-xl border border-zinc-800 outline-none text-sm text-center text-blue-400 font-bold" />
-                  <input type="text" value={ing.unit} onChange={(e) => updateIngredient(index, 'unit', e.target.value)}
+                  
+                  <input type="text" value={ing.unit} 
+                    onFocus={(e) => e.target.select()}
+                    onChange={(e) => updateIngredient(index, 'unit', e.target.value)}
                     className="bg-zinc-900 p-3 rounded-xl border border-zinc-800 outline-none text-sm text-center font-bold lowercase" />
+                  
                   <button type="button" onClick={() => setIngredients(ingredients.filter((_, i) => i !== index))} className="text-zinc-800 text-xl">✕</button>
                 </div>
               ))}
