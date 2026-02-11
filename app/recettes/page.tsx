@@ -7,6 +7,8 @@ import useSWR from 'swr'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/app/context/AuthContext' // Vérifie bien ce chemin !
 import { usePathname } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
+
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -27,6 +29,12 @@ export default function Recettes() {
   const { user, logout } = useAuth()
   const [view, setView] = useState<'production' | 'plating'>('production')
   const [search, setSearch] = useState('')
+  const searchParams = useSearchParams()
+const tabParam = searchParams.get('tab')
+
+// Au chargement, si tab=pass est dans l'URL, on ouvre le PASS par défaut
+const [activeTab, setActiveTab] = useState(tabParam === 'pass' ? 'plating' : 'production')
+  
 
   const { data: recipes, error: swrError } = useSWR('recipes_list', fetcher)
 
@@ -108,7 +116,8 @@ export default function Recettes() {
 
       <div className="grid grid-cols-2 gap-4">
         {filteredRecipes.map((recipe) => (
-          <Link href={`/recettes/${recipe.id}`} key={recipe.id} 
+          <Link href={`/recettes/${recipe.id}${view === 'plating' ? '?from=pass' : ''}`} 
+  key={recipe.id}
             className="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden active:scale-95 transition-transform"
           >
             <div className="aspect-square bg-zinc-800 relative">

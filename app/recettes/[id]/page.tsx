@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/app/context/AuthContext'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useSearchParams } from 'next/navigation'
 
 
 const supabase = createClient(
@@ -22,6 +23,10 @@ export default function FicheRecette() {
   const [recipe, setRecipe] = useState<any>(null)
   const [yieldInput, setYieldInput] = useState<number>(1)
   const [loading, setLoading] = useState(true)
+
+  const searchParams = useSearchParams()
+  const from = searchParams.get('from') // Récupère "pass" si présent
+  const backHref = from === 'pass' ? '/recettes?tab=pass' : '/recettes'
 
   useEffect(() => {
     if (!id) return
@@ -93,7 +98,7 @@ export default function FicheRecette() {
           
           
           <Link 
-  href="/recettes" 
+  href={backHref} 
   onClick={(e) => e.stopPropagation()} 
   className="bg-black/40 backdrop-blur-md rounded-full p-2 border border-white/10 inline-flex items-center justify-center"
 >
