@@ -311,15 +311,19 @@ const generateShoppingList = async () => {
         </div>
       )}
 
-      {/* NAVBAR BASSE UNIFIÉE - FINALE V2 (Icône Couteau/Cuillère) */}
-<div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-xl border-t border-zinc-900 flex justify-around items-center z-50 
+      {/* NAVBAR BASSE UNIFIÉE - FOUET À GAUCHE */}
+<div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-xl border-t border-zinc-800 flex justify-around items-center z-50 
   pt-3 pb-[calc(env(safe-area-inset-bottom)+10px)] px-6 shadow-lg shadow-black/50">
   
-  {/* MEP - Icône Couteau & Cuillère */}
+  {/* 1. MEP (ACCUEIL) - Icône Fouet */}
   <Link href="/" className="flex flex-col items-center gap-1 group">
     <div className={`p-1 transition-all ${pathname === '/' ? 'text-blue-500 scale-110' : 'text-zinc-600'}`}>
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="m3 2 19 19"/><path d="m21 2-19 19"/><path d="M8 18h.01"/><path d="M16 18h.01"/>
+        {/* Le Fouet */}
+        <path d="M9 7c0-2.8 1.3-5 3-5s3 2.2 3 5-1.3 5-3 5-3-2.2-3-5Z" />
+        <path d="M12 2c.6 0 1 1 1 2.5S12.6 7 12 7s-1-1-1-2.5S11.4 2 12 2Z" />
+        <path d="M12 12v10" />
+        <path d="M10 20h4" />
       </svg>
     </div>
     <span className={`text-[9px] font-black uppercase tracking-widest ${pathname === '/' ? 'text-white' : 'text-zinc-700'}`}>
@@ -327,7 +331,7 @@ const generateShoppingList = async () => {
     </span>
   </Link>
   
-  {/* FICHES (Recettes) */}
+  {/* 2. FICHES (RECETTES) - Icône Livre */}
   <Link href="/recettes" className="flex flex-col items-center gap-1 group">
     <div className={`p-1 transition-all ${pathname.includes('/recettes') ? 'text-blue-500 scale-110' : 'text-zinc-600'}`}>
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -339,7 +343,7 @@ const generateShoppingList = async () => {
     </span>
   </Link>
   
-  {/* LOGS (Historique) */}
+  {/* 3. LOGS (HISTORIQUE) - Icône Horloge */}
   <Link href="/historique" className="flex flex-col items-center gap-1 group">
     <div className={`p-1 transition-all ${pathname === '/historique' ? 'text-blue-500 scale-110' : 'text-zinc-600'}`}>
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -351,7 +355,6 @@ const generateShoppingList = async () => {
     </span>
   </Link>
 </div>
-
 
       {/* DRAWER SHOPPING LIST STYLE IPHONE */}
 <AnimatePresence>
