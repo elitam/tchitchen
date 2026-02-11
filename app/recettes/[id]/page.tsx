@@ -89,9 +89,18 @@ export default function FicheRecette() {
         
         {/* Boutons de navigation */}
         <div className="absolute top-0 w-full p-6 flex justify-between items-start pt-[calc(env(safe-area-inset-top)+10px)] z-50">
-          <button onClick={(e) => { e.stopPropagation(); router.back(); }} className="bg-black/40 backdrop-blur-md rounded-full p-2 border border-white/10">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="m15 18-6-6 6-6"/></svg>
-          </button>
+          
+          
+          
+          <Link 
+  href="/recettes" 
+  onClick={(e) => e.stopPropagation()} 
+  className="bg-black/40 backdrop-blur-md rounded-full p-2 border border-white/10 inline-flex items-center justify-center"
+>
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+    <path d="m15 18-6-6 6-6"/>
+  </svg>
+</Link>
           
           <div className="flex gap-3">
             {user?.role === 'admin' && (
