@@ -311,19 +311,16 @@ const generateShoppingList = async () => {
         </div>
       )}
 
-      {/* NAVBAR BASSE UNIFIÉE - FOUET À GAUCHE */}
-<div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-xl border-t border-zinc-800 flex justify-around items-center z-50 
+      {/* NAVBAR BASSE UNIFIÉE - VERSION TOQUE DE CHEF */}
+<div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-xl border-t border-zinc-900 flex justify-around items-center z-50 
   pt-3 pb-[calc(env(safe-area-inset-bottom)+10px)] px-6 shadow-lg shadow-black/50">
   
-  {/* 1. MEP (ACCUEIL) - Icône Fouet */}
+  {/* 1. MEP (ACCUEIL) - Icône Toque */}
   <Link href="/" className="flex flex-col items-center gap-1 group">
     <div className={`p-1 transition-all ${pathname === '/' ? 'text-blue-500 scale-110' : 'text-zinc-600'}`}>
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        {/* Le Fouet */}
-        <path d="M9 7c0-2.8 1.3-5 3-5s3 2.2 3 5-1.3 5-3 5-3-2.2-3-5Z" />
-        <path d="M12 2c.6 0 1 1 1 2.5S12.6 7 12 7s-1-1-1-2.5S11.4 2 12 2Z" />
-        <path d="M12 12v10" />
-        <path d="M10 20h4" />
+        <path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z"/>
+        <line x1="6" y1="17" x2="18" y2="17"/>
       </svg>
     </div>
     <span className={`text-[9px] font-black uppercase tracking-widest ${pathname === '/' ? 'text-white' : 'text-zinc-700'}`}>

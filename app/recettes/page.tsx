@@ -148,16 +148,16 @@ export default function Recettes() {
   </Link>
 )}
 
-      {/* NAVBAR BASSE UNIFIÉE - FINALE (MEP / FICHES / LOGS) */}
+      {/* NAVBAR BASSE UNIFIÉE - VERSION TOQUE DE CHEF */}
 <div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-xl border-t border-zinc-900 flex justify-around items-center z-50 
-  pt-3 pb-[calc(env(safe-area-inset-bottom)+10px)] px-6">
+  pt-3 pb-[calc(env(safe-area-inset-bottom)+10px)] px-6 shadow-lg shadow-black/50">
   
-  {/* MEP (Mise En Place) - Nouvelle icône Fouet */}
+  {/* 1. MEP (ACCUEIL) - Icône Toque */}
   <Link href="/" className="flex flex-col items-center gap-1 group">
     <div className={`p-1 transition-all ${pathname === '/' ? 'text-blue-500 scale-110' : 'text-zinc-600'}`}>
-      {/* Icône Fouet */}
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M5 22h14"/><path d="m5 2h14"/><path d="M17 22v-4.135c0-1.613-1.28-2.938-2.886-3.016A4.99 4.99 0 0 1 12 10V2"/><path d="M7 22v-4.135c0-1.613 1.28-2.938 2.886-3.016A4.99 4.99 0 0 0 12 10V2"/>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z"/>
+        <line x1="6" y1="17" x2="18" y2="17"/>
       </svg>
     </div>
     <span className={`text-[9px] font-black uppercase tracking-widest ${pathname === '/' ? 'text-white' : 'text-zinc-700'}`}>
@@ -165,7 +165,7 @@ export default function Recettes() {
     </span>
   </Link>
   
-  {/* FICHES (Recettes) - Icône Livre */}
+  {/* 2. FICHES (RECETTES) - Icône Livre */}
   <Link href="/recettes" className="flex flex-col items-center gap-1 group">
     <div className={`p-1 transition-all ${pathname.includes('/recettes') ? 'text-blue-500 scale-110' : 'text-zinc-600'}`}>
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -177,7 +177,7 @@ export default function Recettes() {
     </span>
   </Link>
   
-  {/* LOGS (Historique) - Icône Horloge */}
+  {/* 3. LOGS (HISTORIQUE) - Icône Horloge */}
   <Link href="/historique" className="flex flex-col items-center gap-1 group">
     <div className={`p-1 transition-all ${pathname === '/historique' ? 'text-blue-500 scale-110' : 'text-zinc-600'}`}>
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
