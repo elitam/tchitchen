@@ -101,7 +101,7 @@ export default function HistoriquePage() {
         <div className="space-y-3">
           <p className="text-[9px] font-black text-zinc-700 uppercase tracking-[0.2em] px-1">Actions</p>
           <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-            {['TOUT', 'STATUS', 'AJOUT', 'ARCHIVE'].map(a => (
+            {['TOUT', 'STATUT', 'AJOUT', 'ARCHIVE'].map(a => (
               <FilterChip key={a} label={a} active={filterAction === a} onClick={() => setFilterAction(a)} />
             ))}
           </div>
@@ -140,16 +140,17 @@ export default function HistoriquePage() {
                     </span>
                     
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold truncate">
-                        <span className={`uppercase mr-2 text-[9px] tracking-wider ${
-                          log.action.includes('AJOUT') ? 'text-green-500' : 
-                          log.action.includes('ARCHIVE') ? 'text-red-500' : 'text-zinc-500'
-                        }`}>
-                          {log.action}
-                        </span>
-                        {log.target_name}
-                      </p>
-                    </div>
+  <p className="text-sm font-bold truncate">
+    <span className={`uppercase mr-2 text-[9px] tracking-wider ${
+      log.action.toUpperCase().includes('AJOUT') ? 'text-green-500' : 
+      log.action.toUpperCase().includes('ARCHIVE') ? 'text-red-500' : 
+      log.action.toUpperCase().includes('STATUT') ? 'text-blue-500' : 'text-zinc-500'
+    }`}>
+      {log.action}
+    </span>
+    {log.target_name}
+  </p>
+</div>
 
                     <span className="text-[10px] font-bold text-zinc-800 tabular-nums">
                       {new Date(log.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
