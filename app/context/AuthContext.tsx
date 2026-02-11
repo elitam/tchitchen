@@ -15,12 +15,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [code, setCode] = useState('')
   const [error, setError] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const [showSplash, setShowSplash] = useState(true) // État pour le rideau de démarrage
+  
+  // État pour le rideau de démarrage "Signature"
+  const [showSplash, setShowSplash] = useState(true)
 
   useEffect(() => {
     setMounted(true)
     
-    // 1. On récupère l'utilisateur s'il existe
+    // 1. Récupération session
     try {
       const savedUser = localStorage.getItem('tchitchen_user')
       if (savedUser && savedUser !== "undefined") {
@@ -31,7 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem('tchitchen_user')
     }
 
-    // 2. On cache le splash screen après 2 secondes pile
+    // 2. Timer du Splash Screen (2 secondes)
     const timer = setTimeout(() => {
       setShowSplash(false)
     }, 2000)
@@ -67,54 +69,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setCode('')
   }
 
-  // Éviter le flash blanc au chargement
   if (!mounted) return <div className="fixed inset-0 bg-black" />
 
   return (
     <AuthContext.Provider value={{ user, logout }}>
       <AnimatePresence mode="wait">
         
-        {/* 1. LE SPLASH SCREEN (Toujours en premier) */}
+        {/* --- 1. LE SPLASH SCREEN SIGNATURE --- */}
         {showSplash ? (
           <motion.div 
             key="splash"
             initial={{ opacity: 1 }}
-            exit={{ opacity: 0, scale: 1.05 }}
-            transition={{ duration: 0.5 }}
-            className="fixed inset-0 bg-black z-[10000] flex flex-col items-center justify-center select-none"
+            exit={{ opacity: 0, scale: 1.05 }} // Léger zoom en disparaissant
+            transition={{ duration: 0.6, ease: "easeInOut" }}
+            className="fixed inset-0 bg-black z-[10000] flex items-center justify-center select-none"
           >
+            {/* Le Logo "T" Architectural Doré */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, ease: "easeOut" }}
-              className="flex flex-col items-center"
             >
-              <div className="text-blue-500 mb-6">
-                <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z"/>
-                  <line x1="6" y1="17" x2="18" y2="17"/>
-                </svg>
-              </div>
-              <h1 className="text-white text-5xl font-black tracking-[0.2em] uppercase italic">
-                Tchitchen
-              </h1>
-              <motion.p 
-                animate={{ opacity: [0.2, 1, 0.2] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="text-zinc-700 text-[10px] font-black uppercase tracking-[0.5em] mt-4"
-              >
-                Mise en place
-              </motion.p>
+              <svg width="120" height="120" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path 
+                  d="M6 4H18V8H14V20H10V8H6V4Z" 
+                  stroke="#D4AF37" // Couleur Or
+                  strokeWidth="1.5" 
+                  strokeLinejoin="round"
+                />
+              </svg>
             </motion.div>
           </motion.div>
         ) 
         
         : !user ? (
-          /* 2. L'ÉCRAN DE CODE (Si non connecté après le splash) */
+          /* --- 2. L'ÉCRAN DE CODE --- */
           <motion.div 
             key="login"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
             className="fixed inset-0 bg-black z-[9999] flex flex-col items-center justify-center p-6 select-none"
           >
             <h1 className="text-white text-4xl font-black tracking-tighter mb-16">Tchitchen</h1>
@@ -140,7 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         ) 
         
         : (
-          /* 3. L'APPLICATION (Une fois loggé et splash terminé) */
+          /* --- 3. L'APPLICATION --- */
           <motion.div 
             key="app"
             initial={{ opacity: 0 }}
