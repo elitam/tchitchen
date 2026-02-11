@@ -107,17 +107,14 @@ const from = searchParams.get('from')
       })
       .eq('id', id)
 
-if (!error) {
-    // On repart vers la fiche en gardant le paramètre 'from'
-    const nextPath = `/recettes/${id}${from === 'pass' ? '?from=pass' : ''}`
-    router.replace(nextPath)
-  }
-
     if (error) {
       alert("Erreur: " + error.message)
       setLoading(false)
     } else {
-      router.replace(`/recettes/${id}`)
+      // ✅ UNE SEULE REDIRECTION ICI
+      // On construit le chemin intelligemment
+      const nextPath = `/recettes/${id}${from === 'pass' ? '?from=pass' : ''}`
+      router.replace(nextPath)
     }
   }
 
