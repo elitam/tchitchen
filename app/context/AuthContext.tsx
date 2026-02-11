@@ -16,13 +16,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState(false)
   const [mounted, setMounted] = useState(false)
   
-  // État pour le rideau de démarrage "Signature"
   const [showSplash, setShowSplash] = useState(true)
 
   useEffect(() => {
     setMounted(true)
     
-    // 1. Récupération session
     try {
       const savedUser = localStorage.getItem('tchitchen_user')
       if (savedUser && savedUser !== "undefined") {
@@ -33,10 +31,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem('tchitchen_user')
     }
 
-    // 2. Timer du Splash Screen (2 secondes)
+    // MODIF VITESSE : 1.5 secondes au lieu de 2
     const timer = setTimeout(() => {
       setShowSplash(false)
-    }, 2000)
+    }, 1500)
 
     return () => clearTimeout(timer)
   }, [])
@@ -75,27 +73,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider value={{ user, logout }}>
       <AnimatePresence mode="wait">
         
-        {/* --- 1. LE SPLASH SCREEN SIGNATURE --- */}
+        {/* --- 1. LE SPLASH SCREEN SIGNATURE (Accéléré & Design iOS) --- */}
         {showSplash ? (
           <motion.div 
             key="splash"
             initial={{ opacity: 1 }}
-            exit={{ opacity: 0, scale: 1.05 }} // Léger zoom en disparaissant
-            transition={{ duration: 0.6, ease: "easeInOut" }}
+            exit={{ opacity: 0, scale: 1.1 }} // Zoom de sortie un peu plus prononcé
+            transition={{ duration: 0.4, ease: "easeInOut" }} // Sortie plus rapide
             className="fixed inset-0 bg-black z-[10000] flex items-center justify-center select-none"
           >
-            {/* Le Logo "T" Architectural Doré */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
+              transition={{ duration: 0.6, ease: "easeOut" }} // Entrée plus rapide
             >
-              <svg width="120" height="120" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {/* NOUVEAU LOGO SVG STYLE IOS */}
+              <svg width="140" height="140" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  {/* Dégradé Or style Apple */}
+                  <linearGradient id="iosGoldGradient" x1="12" y1="4" x2="12" y2="20" gradientUnits="userSpaceOnUse">
+                    <stop stopColor="#FCD34D" /> {/* Jaune or lumineux */}
+                    <stop offset="1" stopColor="#B45309" /> {/* Or ambré profond */}
+                  </linearGradient>
+                  {/* Ombre portée douce pour la profondeur */}
+                  <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feDropShadow dx="0" dy="4" stdDeviation="5" floodColor="#B45309" floodOpacity="0.4"/>
+                  </filter>
+                </defs>
+                
+                {/* La forme du T remplie avec le dégradé et l'ombre */}
                 <path 
                   d="M6 4H18V8H14V20H10V8H6V4Z" 
-                  stroke="#D4AF37" // Couleur Or
-                  strokeWidth="1.5" 
-                  strokeLinejoin="round"
+                  fill="url(#iosGoldGradient)" 
+                  filter="url(#softGlow)"
+                  stroke="rgba(255,255,255,0.1)" // Fin contour blanc pour la netteté
+                  strokeWidth="0.2"
                 />
               </svg>
             </motion.div>
@@ -108,7 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             key="login"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.4 }}
+            transition={{ duration: 0.3 }}
             className="fixed inset-0 bg-black z-[9999] flex flex-col items-center justify-center p-6 select-none"
           >
             <h1 className="text-white text-4xl font-black tracking-tighter mb-16">Tchitchen</h1>
@@ -139,7 +151,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             key="app"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.4 }}
           >
             {children}
           </motion.div>
