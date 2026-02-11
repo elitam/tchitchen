@@ -60,31 +60,71 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Si l'appli n'est pas encore "montée" dans le navigateur, on affiche un écran noir vide
   if (!mounted) return <div className="fixed inset-0 bg-black" />
 
-  if (!user) {
-    return (
-      <div className="fixed inset-0 bg-black z-[9999] flex flex-col items-center justify-center p-6 select-none">
-        <h1 className="text-white text-4xl font-black tracking-tighter mb-16">Tchitchen</h1>
-        <div className="flex gap-6 mb-16">
-          {[0, 1, 2, 3].map((i) => (
-            <div key={i} className={`w-4 h-4 rounded-full border-2 transition-all duration-200 ${code.length > i ? 'bg-white border-white scale-110' : error ? 'border-red-500' : 'border-zinc-800'}`} />
-          ))}
-        </div>
-        <div className="grid grid-cols-3 gap-6">
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-            <button key={num} onClick={() => handleKeyPress(num.toString())} className="w-20 h-20 rounded-full bg-zinc-900/50 border border-zinc-800/50 flex items-center justify-center text-3xl font-bold active:bg-zinc-800 transition-colors">
-              {num}
-            </button>
-          ))}
-          <div />
-          <button onClick={() => handleKeyPress('0')} className="w-20 h-20 rounded-full bg-zinc-900/50 border border-zinc-800/50 flex items-center justify-center text-3xl font-bold active:bg-zinc-800 transition-colors">0</button>
-          <button onClick={() => setCode(code.slice(0, -1))} className="w-20 h-20 flex items-center justify-center text-zinc-600 active:text-white transition-colors">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
-          </button>
-        </div>
-        {error && <p className="text-red-500 text-[10px] font-black uppercase mt-12 tracking-widest animate-pulse">Code Incorrect</p>}
+ if (!user) {
+  return (
+    <div className="fixed inset-0 bg-black z-[9999] flex flex-col items-center justify-center p-6 select-none">
+      {/* LOGO */}
+      <h1 className="text-white text-4xl font-black tracking-tighter mb-16">Tchitchen</h1>
+      
+      {/* INDICATEUR DE CODE (DOTS) */}
+      <div className="flex gap-6 mb-16">
+        {[0, 1, 2, 3].map((i) => (
+          <div 
+            key={i} 
+            className={`w-4 h-4 rounded-full border-2 transition-all duration-200 ${
+              code.length > i 
+              ? 'bg-white border-white scale-110 shadow-[0_0_10px_rgba(255,255,255,0.5)]' 
+              : error ? 'border-red-500 animate-shake' : 'border-zinc-700'
+            }`} 
+          />
+        ))}
       </div>
-    )
-  }
+
+      {/* PAVÉ NUMÉRIQUE */}
+      <div className="grid grid-cols-3 gap-6">
+        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+          <button 
+            key={num} 
+            onClick={() => handleKeyPress(num.toString())} 
+            className="w-20 h-20 rounded-full bg-zinc-800/40 border border-zinc-700/30 flex items-center justify-center text-3xl font-medium text-white active:bg-white active:text-black transition-all duration-100"
+          >
+            {num}
+          </button>
+        ))}
+        
+        {/* BOUTON VIDE POUR L'ALIGNEMENT */}
+        <div />
+        
+        {/* BOUTON 0 */}
+        <button 
+          onClick={() => handleKeyPress('0')} 
+          className="w-20 h-20 rounded-full bg-zinc-800/40 border border-zinc-700/30 flex items-center justify-center text-3xl font-medium text-white active:bg-white active:text-black transition-all duration-100"
+        >
+          0
+        </button>
+
+        {/* BOUTON RETOUR / EFFACER */}
+        <button 
+          onClick={() => setCode(code.slice(0, -1))} 
+          className="w-20 h-20 flex items-center justify-center text-zinc-400 active:text-white transition-colors"
+        >
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/>
+            <line x1="18" y1="9" x2="12" y2="15"/>
+            <line x1="12" y1="9" x2="18" y2="15"/>
+          </svg>
+        </button>
+      </div>
+
+      {/* MESSAGE D'ERREUR */}
+      {error && (
+        <p className="text-red-500 text-[10px] font-black uppercase mt-12 tracking-[0.2em] animate-pulse">
+          Code Incorrect
+        </p>
+      )}
+    </div>
+  )
+}
 
   return (
     <AuthContext.Provider value={{ user, logout }}>
