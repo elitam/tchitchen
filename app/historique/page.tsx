@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
 import { useAuth } from '@/app/context/AuthContext'
+import { usePathname } from 'next/navigation'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,6 +13,7 @@ const supabase = createClient(
 )
 
 export default function HistoriquePage() {
+    const pathname = usePathname()
   const { user, logout } = useAuth()
   const [logs, setLogs] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -102,12 +104,31 @@ export default function HistoriquePage() {
         )}
       </div>
 
-      {/* NAVBAR BASSE UNIFIÉE */}
-      <div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-xl border-t border-zinc-800 p-6 flex justify-around items-center z-50">
-        <Link href="/" className="text-zinc-600 text-xs font-black tracking-widest uppercase">Accueil</Link>
-        <Link href="/recettes" className="text-zinc-600 text-xs font-black tracking-widest uppercase">Recettes</Link>
-        <button className="text-white text-xs font-black tracking-widest uppercase">Historique</button>
-      </div>
+      {/* NAVBAR BASSE UNIFIÉE - VERSION FIXÉE */}
+<div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-xl border-t border-zinc-800 flex justify-around items-center z-50 
+  pt-4 pb-[calc(env(safe-area-inset-bottom)+15px)] px-6">
+  
+  <Link 
+    href="/" 
+    className={`${pathname === '/' ? 'text-white' : 'text-zinc-600'} text-xs font-black tracking-widest uppercase transition-colors`}
+  >
+    Accueil
+  </Link>
+  
+  <Link 
+    href="/recettes" 
+    className={`${pathname.includes('/recettes') ? 'text-white' : 'text-zinc-600'} text-xs font-black tracking-widest uppercase transition-colors`}
+  >
+    Recettes
+  </Link>
+  
+  <Link 
+    href="/historique" 
+    className={`${pathname === '/historique' ? 'text-white' : 'text-zinc-600'} text-xs font-black tracking-widest uppercase transition-colors`}
+  >
+    Historique
+  </Link>
+</div>
     </main>
   )
 }
