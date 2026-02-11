@@ -6,6 +6,7 @@ import Link from 'next/link'
 import useSWR from 'swr'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/app/context/AuthContext' // Vérifie bien ce chemin !
+import { usePathname } from 'next/navigation'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -22,6 +23,7 @@ const fetcher = async () => {
 }
 
 export default function Recettes() {
+  const pathname = usePathname()
   const { user, logout } = useAuth()
   const [view, setView] = useState<'production' | 'plating'>('production')
   const [search, setSearch] = useState('')
@@ -38,7 +40,7 @@ export default function Recettes() {
   if (swrError) return <div className="p-10 text-red-500">Erreur de chargement...</div>
 
   return (
-    <main className="min-h-screen bg-black text-white p-6 pt-[calc(env(safe-area-inset-top)+20px)] pb-32">
+    <main className="min-h-screen bg-black text-white p-6 pt-[calc(env(safe-area-inset-top)+20px)] pb-40">
   <div className="flex justify-between items-center mb-10">
     <h1 className="text-4xl font-black tracking-tighter uppercase">
       Recettes 
@@ -131,10 +133,30 @@ export default function Recettes() {
         > + </Link>
       )}
 
-      <div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-xl border-t border-zinc-800 p-6 flex justify-around items-center z-50">
-  <Link href="/" className="text-zinc-600 text-xs font-black tracking-widest uppercase">Accueil</Link>
-  <button className="text-white text-xs font-black tracking-widest uppercase">Recettes</button>
-  <Link href="/historique" className="text-zinc-600 text-xs font-black tracking-widest uppercase">Historique</Link>
+      {/* NAVBAR BASSE UNIFIÉE - VERSION FIXÉE */}
+<div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-xl border-t border-zinc-800 flex justify-around items-center z-50 
+  pt-4 pb-[calc(env(safe-area-inset-bottom)+15px)] px-6">
+  
+  <Link 
+    href="/" 
+    className={`${pathname === '/' ? 'text-white' : 'text-zinc-600'} text-xs font-black tracking-widest uppercase transition-colors`}
+  >
+    Accueil
+  </Link>
+  
+  <Link 
+    href="/recettes" 
+    className={`${pathname.includes('/recettes') ? 'text-white' : 'text-zinc-600'} text-xs font-black tracking-widest uppercase transition-colors`}
+  >
+    Recettes
+  </Link>
+  
+  <Link 
+    href="/historique" 
+    className={`${pathname === '/historique' ? 'text-white' : 'text-zinc-600'} text-xs font-black tracking-widest uppercase transition-colors`}
+  >
+    Historique
+  </Link>
 </div>
     </main>
   )
