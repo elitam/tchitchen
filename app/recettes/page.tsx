@@ -27,13 +27,13 @@ const fetcher = async () => {
 export default function Recettes() {
   const pathname = usePathname()
   const { user, logout } = useAuth()
-  const [view, setView] = useState<'production' | 'plating'>('production')
+
   const [search, setSearch] = useState('')
   const searchParams = useSearchParams()
 const tabParam = searchParams.get('tab')
+// ✅ Une seule variable 'view' qui lit l'URL au démarrage
+const [view, setView] = useState<'production' | 'plating'>(tabParam === 'pass' ? 'plating' : 'production')
 
-// Au chargement, si tab=pass est dans l'URL, on ouvre le PASS par défaut
-const [activeTab, setActiveTab] = useState(tabParam === 'pass' ? 'plating' : 'production')
   
 
   const { data: recipes, error: swrError } = useSWR('recipes_list', fetcher)
