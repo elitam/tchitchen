@@ -48,7 +48,7 @@ export default function HistoriquePage() {
   }, {})
 
   return (
-    <main className="min-h-screen bg-black text-white p-6 pt-[calc(env(safe-area-inset-top)+20px)] pb-32">
+    <main className="min-h-screen bg-black text-white p-6 pt-[calc(env(safe-area-inset-top)+20px)] pb-40">
       
       {/* HEADER UNIFIÉ */}
       <div className="flex justify-between items-center mb-10">
@@ -104,29 +104,44 @@ export default function HistoriquePage() {
         )}
       </div>
 
-      {/* NAVBAR BASSE UNIFIÉE - VERSION FIXÉE */}
-<div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-xl border-t border-zinc-800 flex justify-around items-center z-50 
-  pt-4 pb-[calc(env(safe-area-inset-bottom)+15px)] px-6">
+     {/* NAVBAR BASSE UNIFIÉE - LOOK NATIVE APP */}
+<div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-xl border-t border-zinc-900 flex justify-around items-center z-50 
+  pt-3 pb-[calc(env(safe-area-inset-bottom)+10px)] px-6">
   
-  <Link 
-    href="/" 
-    className={`${pathname === '/' ? 'text-white' : 'text-zinc-600'} text-xs font-black tracking-widest uppercase transition-colors`}
-  >
-    Accueil
+  {/* ACCUEIL / MUR */}
+  <Link href="/" className="flex flex-col items-center gap-1 group">
+    <div className={`p-1 transition-all ${pathname === '/' ? 'text-blue-500 scale-110' : 'text-zinc-600'}`}>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>
+      </svg>
+    </div>
+    <span className={`text-[9px] font-black uppercase tracking-widest ${pathname === '/' ? 'text-white' : 'text-zinc-700'}`}>
+      Mur
+    </span>
   </Link>
   
-  <Link 
-    href="/recettes" 
-    className={`${pathname.includes('/recettes') ? 'text-white' : 'text-zinc-600'} text-xs font-black tracking-widest uppercase transition-colors`}
-  >
-    Recettes
+  {/* RECETTES */}
+  <Link href="/recettes" className="flex flex-col items-center gap-1 group">
+    <div className={`p-1 transition-all ${pathname.includes('/recettes') ? 'text-blue-500 scale-110' : 'text-zinc-600'}`}>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+      </svg>
+    </div>
+    <span className={`text-[9px] font-black uppercase tracking-widest ${pathname.includes('/recettes') ? 'text-white' : 'text-zinc-700'}`}>
+      Fiches
+    </span>
   </Link>
   
-  <Link 
-    href="/historique" 
-    className={`${pathname === '/historique' ? 'text-white' : 'text-zinc-600'} text-xs font-black tracking-widest uppercase transition-colors`}
-  >
-    Historique
+  {/* HISTORIQUE */}
+  <Link href="/historique" className="flex flex-col items-center gap-1 group">
+    <div className={`p-1 transition-all ${pathname === '/historique' ? 'text-blue-500 scale-110' : 'text-zinc-600'}`}>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/>
+      </svg>
+    </div>
+    <span className={`text-[9px] font-black uppercase tracking-widest ${pathname === '/historique' ? 'text-white' : 'text-zinc-700'}`}>
+      Logs
+    </span>
   </Link>
 </div>
     </main>
