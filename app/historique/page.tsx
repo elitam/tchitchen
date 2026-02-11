@@ -21,12 +21,13 @@ export default function HistoriquePage() {
   // ÉTATS DE FILTRAGE
   const [filterAction, setFilterAction] = useState('TOUT')
   const [filterUser, setFilterUser] = useState('TOUT')
+  const [filterDate, setFilterDate] = useState('TOUT') // 'TOUT', 'TODAY', 'YESTERDAY' ou 'YYYY-MM-DD'
 
   useEffect(() => {
     const fetchLogs = async () => {
       try {
         const { data } = await supabase
-          .from('audit_logs') // On garde bien ton nom de table
+          .from('audit_logs')
           .select('*')
           .order('created_at', { ascending: false })
           .limit(100)
@@ -40,22 +41,39 @@ export default function HistoriquePage() {
     fetchLogs()
   }, [])
 
-  // 1. EXTRAIRE LES UTILISATEURS UNIQUES POUR LES FILTRES
+  // HELPER: Formater YYYY-MM-DD en DD-MM-YYYY
+  const formatDateDisplay = (dateStr: string) => {
+    if (!dateStr || dateStr === 'TOUT') return 'CHOISIR DATE'
+    const [y, m, d] = dateStr.split('-')
+    return `${d}-${m}-${y}`
+  }
+
+  // 1. EXTRAIRE LES UTILISATEURS UNIQUES
   const uniqueUsers = useMemo(() => {
     const users = logs.map(l => l.user_name).filter(Boolean)
     return Array.from(new Set(users))
   }, [logs])
 
-  // 2. FILTRER LES LOGS SELON LES CHOIX
+  // 2. FILTRER LES LOGS (ACTION + UTILISATEUR + DATE)
   const filteredLogs = useMemo(() => {
     return logs.filter(log => {
       const matchAction = filterAction === 'TOUT' || log.action.toUpperCase().includes(filterAction.toUpperCase())
       const matchUser = filterUser === 'TOUT' || log.user_name === filterUser
-      return matchAction && matchUser
-    })
-  }, [logs, filterAction, filterUser])
+      
+      let matchDate = true
+      const logDate = new Date(log.created_at).toISOString().split('T')[0]
+      const today = new Date().toISOString().split('T')[0]
+      const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
 
-  // 3. GROUPER PAR DATE (Seulement les logs filtrés)
+      if (filterDate === 'TODAY') matchDate = logDate === today
+      else if (filterDate === 'YESTERDAY') matchDate = logDate === yesterday
+      else if (filterDate !== 'TOUT') matchDate = logDate === filterDate
+
+      return matchAction && matchUser && matchDate
+    })
+  }, [logs, filterAction, filterUser, filterDate])
+
+  // 3. GROUPER PAR DATE
   const groupedLogs = useMemo(() => {
     return filteredLogs.reduce((groups: any, log: any) => {
       const date = new Date(log.created_at).toLocaleDateString('fr-FR', {
@@ -67,12 +85,11 @@ export default function HistoriquePage() {
     }, {})
   }, [filteredLogs])
 
-  // Petit composant de bouton filtre
   const FilterChip = ({ label, active, onClick }: { label: string, active: boolean, onClick: () => void }) => (
     <button
       onClick={onClick}
       className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap border ${
-        active ? 'bg-white text-black border-white' : 'bg-zinc-900 text-zinc-600 border-zinc-800'
+        active ? 'bg-white text-black border-white shadow-lg shadow-white/10' : 'bg-zinc-900 text-zinc-600 border-zinc-800'
       }`}
     >
       {label}
@@ -80,7 +97,7 @@ export default function HistoriquePage() {
   )
 
   return (
-    <main className="min-h-screen bg-black text-white p-6 pt-[calc(env(safe-area-inset-top)+20px)] pb-40">
+    <main className="min-h-screen bg-black text-white p-6 pt-[calc(env(safe-area-inset-top)+20px)] pb-40 font-sans">
       
       {/* HEADER */}
       <div className="flex justify-between items-center mb-8">
@@ -97,7 +114,34 @@ export default function HistoriquePage() {
 
       {/* BLOC DE FILTRAGE */}
       <div className="space-y-6 mb-10">
-        {/* FILTRE ACTIONS */}
+        
+        {/* PÉRIODE (DATE) */}
+        <div className="space-y-3">
+          <p className="text-[9px] font-black text-zinc-700 uppercase tracking-[0.2em] px-1">Période</p>
+          <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar items-center">
+            <FilterChip label="TOUT" active={filterDate === 'TOUT'} onClick={() => setFilterDate('TOUT')} />
+            <FilterChip label="AUJOURD'HUI" active={filterDate === 'TODAY'} onClick={() => setFilterDate('TODAY')} />
+            <FilterChip label="HIER" active={filterDate === 'YESTERDAY'} onClick={() => setFilterDate('YESTERDAY')} />
+            
+            {/* SÉLECTEUR DATE PERSO */}
+            <div className={`relative flex items-center px-4 py-2 rounded-full border transition-all ${
+              (filterDate !== 'TOUT' && filterDate !== 'TODAY' && filterDate !== 'YESTERDAY')
+              ? 'bg-white text-black border-white' : 'bg-zinc-900 text-zinc-600 border-zinc-800'
+            }`}>
+              <span className="text-[10px] font-black uppercase tracking-widest">
+                {filterDate.length === 10 ? formatDateDisplay(filterDate) : 'DD-MM-YYYY'}
+              </span>
+              <input 
+                type="date" 
+                value={filterDate.length === 10 ? filterDate : ""}
+                onChange={(e) => setFilterDate(e.target.value)}
+                className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* ACTIONS */}
         <div className="space-y-3">
           <p className="text-[9px] font-black text-zinc-700 uppercase tracking-[0.2em] px-1">Actions</p>
           <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
@@ -107,7 +151,7 @@ export default function HistoriquePage() {
           </div>
         </div>
 
-        {/* FILTRE UTILISATEURS */}
+        {/* BRIGADE */}
         <div className="space-y-3">
           <p className="text-[9px] font-black text-zinc-700 uppercase tracking-[0.2em] px-1">Brigade</p>
           <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
@@ -119,7 +163,7 @@ export default function HistoriquePage() {
         </div>
       </div>
 
-      {/* LISTE DES LOGS GROUPÉS */}
+      {/* LISTE */}
       <div className="space-y-10">
         {loading ? (
           <p className="text-zinc-800 font-black italic animate-pulse text-center py-10">CHARGEMENT...</p>
@@ -140,17 +184,17 @@ export default function HistoriquePage() {
                     </span>
                     
                     <div className="flex-1 min-w-0">
-  <p className="text-sm font-bold truncate">
-    <span className={`uppercase mr-2 text-[9px] tracking-wider ${
-      log.action.toUpperCase().includes('AJOUT') ? 'text-green-500' : 
-      log.action.toUpperCase().includes('ARCHIVE') ? 'text-red-500' : 
-      log.action.toUpperCase().includes('STATUT') ? 'text-blue-500' : 'text-zinc-500'
-    }`}>
-      {log.action}
-    </span>
-    {log.target_name}
-  </p>
-</div>
+                      <p className="text-sm font-bold truncate">
+                        <span className={`uppercase mr-2 text-[9px] tracking-wider ${
+                          log.action.toUpperCase().includes('AJOUT') ? 'text-green-500' : 
+                          log.action.toUpperCase().includes('ARCHIVE') ? 'text-red-500' : 
+                          log.action.toUpperCase().includes('STATUT') ? 'text-blue-500' : 'text-zinc-500'
+                        }`}>
+                          {log.action}
+                        </span>
+                        {log.target_name}
+                      </p>
+                    </div>
 
                     <span className="text-[10px] font-bold text-zinc-800 tabular-nums">
                       {new Date(log.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
