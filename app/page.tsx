@@ -306,23 +306,24 @@ const generateShoppingList = async () => {
         </div>
       )}
 
-      {/* NAVBAR BASSE UNIFIÉE - LOOK NATIVE APP */}
+      {/* NAVBAR BASSE UNIFIÉE - FINALE (MEP / FICHES / LOGS) */}
 <div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-xl border-t border-zinc-900 flex justify-around items-center z-50 
   pt-3 pb-[calc(env(safe-area-inset-bottom)+10px)] px-6">
   
-  {/* ACCUEIL / MUR */}
+  {/* MEP (Mise En Place) - Nouvelle icône Fouet */}
   <Link href="/" className="flex flex-col items-center gap-1 group">
     <div className={`p-1 transition-all ${pathname === '/' ? 'text-blue-500 scale-110' : 'text-zinc-600'}`}>
+      {/* Icône Fouet */}
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>
+        <path d="M5 22h14"/><path d="m5 2h14"/><path d="M17 22v-4.135c0-1.613-1.28-2.938-2.886-3.016A4.99 4.99 0 0 1 12 10V2"/><path d="M7 22v-4.135c0-1.613 1.28-2.938 2.886-3.016A4.99 4.99 0 0 0 12 10V2"/>
       </svg>
     </div>
     <span className={`text-[9px] font-black uppercase tracking-widest ${pathname === '/' ? 'text-white' : 'text-zinc-700'}`}>
-      Mur
+      MEP
     </span>
   </Link>
   
-  {/* RECETTES */}
+  {/* FICHES (Recettes) - Icône Livre */}
   <Link href="/recettes" className="flex flex-col items-center gap-1 group">
     <div className={`p-1 transition-all ${pathname.includes('/recettes') ? 'text-blue-500 scale-110' : 'text-zinc-600'}`}>
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -334,7 +335,7 @@ const generateShoppingList = async () => {
     </span>
   </Link>
   
-  {/* HISTORIQUE */}
+  {/* LOGS (Historique) - Icône Horloge */}
   <Link href="/historique" className="flex flex-col items-center gap-1 group">
     <div className={`p-1 transition-all ${pathname === '/historique' ? 'text-blue-500 scale-110' : 'text-zinc-600'}`}>
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
