@@ -3,7 +3,9 @@ import { createContext, useContext, useState, useEffect } from 'react'
 
 const USERS_MAP: any = {
   "5368": { initials: "ET", role: "admin" },
-  "2410": { initials: "ZZ", role: "user" }
+  "2410": { initials: "ZZ", role: "user" },
+  "2512": { initials: "CR", role: "admin" }
+
 }
 
 const AuthContext = createContext<any>({ user: null, logout: () => {} })
