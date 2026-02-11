@@ -45,6 +45,7 @@ useEffect(() => {
 // 2. Gérer la saisie et les suggestions
 const handleInputChange = (val: string) => {
   setNewTaskName(val)
+  setSelectedRecipeId(null);
   if (val.length > 1) {
     const filtered = allRecipes.filter(r => 
       r.title.toLowerCase().includes(val.toLowerCase())
@@ -128,6 +129,8 @@ const generateShoppingList = async () => {
       }])
 
       setNewTaskName('')
+      setSelectedRecipeId(null); // On remet à zéro pour la prochaine tâche
+    setSuggestions([]);
       setIsModalOpen(false)
     }
   }
@@ -303,7 +306,12 @@ const generateShoppingList = async () => {
               </div>
 
               <div className="flex gap-3">
-                <button type="button" onClick={() => { setIsModalOpen(false); setSuggestions([]); }} className="flex-1 p-4 font-bold text-zinc-500">Annuler</button>
+                <button type="button"onClick={() => {
+    setIsModalOpen(false);
+    setNewTaskName(''); // Reset le nom
+    setSelectedRecipeId(null); // Reset le lien !
+    setSuggestions([]); // Vide les suggestions
+  }} className="flex-1 p-4 font-bold text-zinc-500">Annuler</button>
                 <button type="submit" className="flex-1 bg-white text-black p-4 rounded-xl font-black uppercase text-xs">Ajouter</button>
               </div>
             </form>
