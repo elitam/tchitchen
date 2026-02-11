@@ -306,16 +306,15 @@ const generateShoppingList = async () => {
         </div>
       )}
 
-      {/* NAVBAR BASSE UNIFIÉE - FINALE (MEP / FICHES / LOGS) */}
+      {/* NAVBAR BASSE UNIFIÉE - FINALE V2 (Icône Couteau/Cuillère) */}
 <div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-xl border-t border-zinc-900 flex justify-around items-center z-50 
-  pt-3 pb-[calc(env(safe-area-inset-bottom)+10px)] px-6">
+  pt-3 pb-[calc(env(safe-area-inset-bottom)+10px)] px-6 shadow-lg shadow-black/50">
   
-  {/* MEP (Mise En Place) - Nouvelle icône Fouet */}
+  {/* MEP - Icône Couteau & Cuillère */}
   <Link href="/" className="flex flex-col items-center gap-1 group">
     <div className={`p-1 transition-all ${pathname === '/' ? 'text-blue-500 scale-110' : 'text-zinc-600'}`}>
-      {/* Icône Fouet */}
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M5 22h14"/><path d="m5 2h14"/><path d="M17 22v-4.135c0-1.613-1.28-2.938-2.886-3.016A4.99 4.99 0 0 1 12 10V2"/><path d="M7 22v-4.135c0-1.613 1.28-2.938 2.886-3.016A4.99 4.99 0 0 0 12 10V2"/>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="m3 2 19 19"/><path d="m21 2-19 19"/><path d="M8 18h.01"/><path d="M16 18h.01"/>
       </svg>
     </div>
     <span className={`text-[9px] font-black uppercase tracking-widest ${pathname === '/' ? 'text-white' : 'text-zinc-700'}`}>
@@ -323,7 +322,7 @@ const generateShoppingList = async () => {
     </span>
   </Link>
   
-  {/* FICHES (Recettes) - Icône Livre */}
+  {/* FICHES (Recettes) */}
   <Link href="/recettes" className="flex flex-col items-center gap-1 group">
     <div className={`p-1 transition-all ${pathname.includes('/recettes') ? 'text-blue-500 scale-110' : 'text-zinc-600'}`}>
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -335,7 +334,7 @@ const generateShoppingList = async () => {
     </span>
   </Link>
   
-  {/* LOGS (Historique) - Icône Horloge */}
+  {/* LOGS (Historique) */}
   <Link href="/historique" className="flex flex-col items-center gap-1 group">
     <div className={`p-1 transition-all ${pathname === '/historique' ? 'text-blue-500 scale-110' : 'text-zinc-600'}`}>
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
