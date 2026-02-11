@@ -19,6 +19,7 @@ const STATUS_LABELS: Record<string, string> = {
 }
 
 export default function Home() {
+  const [duplicateError, setDuplicateError] = useState(false);
   const { user, logout } = useAuth()
   const [tasks, setTasks] = useState<any[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -45,6 +46,7 @@ useEffect(() => {
 // 2. Gérer la saisie et les suggestions
 const handleInputChange = (val: string) => {
   setNewTaskName(val)
+  setDuplicateError(false);
   setSelectedRecipeId(null);
   if (val.length > 1) {
     const filtered = allRecipes.filter(r => 
@@ -106,34 +108,41 @@ const generateShoppingList = async () => {
 
   // 1. AJOUTER UNE TÂCHE + LOG
   const addTask = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!newTaskName.trim()) return
-    
-    const { data } = await supabase
+  e.preventDefault();
+  
+  const normalizedNewName = newTaskName.trim().toLowerCase();
+  if (!normalizedNewName) return;
+
+  // VERIFICATION DES DOUBLONS
+  const isDuplicate = tasks.some(task => 
+    task.display_name.toLowerCase().trim() === normalizedNewName
+  );
+
+  if (isDuplicate) {
+    setDuplicateError(true);
+    // On cache le message automatiquement après 3 secondes
+    setTimeout(() => setDuplicateError(false), 3000);
+    return; // ON S'ARRÊTE LÀ
+  }
+
+  // ... SI PAS DE DOUBLON, ON CONTINUE L'INSERTION SUPABASE ...
+  const { data } = await supabase
     .from('tasks')
     .insert([{ 
-      display_name: newTaskName, 
-      status: 'pending',
-      recipe_id: selectedRecipeId // On ajoute le lien ici
+      display_name: newTaskName.trim(), 
+      status: 'pending', 
+      recipe_id: selectedRecipeId 
     }])
-    .select()
+    .select();
 
-    if (data) {
-      setTasks(sortTasks([data[0], ...tasks]))
-      
-      // Audit Log
-      await supabase.from('audit_logs').insert([{
-        user_name: user?.initials,
-        action: 'AJOUT TÂCHE',
-        target_name: newTaskName
-      }])
-
-      setNewTaskName('')
-      setSelectedRecipeId(null); // On remet à zéro pour la prochaine tâche
-    setSuggestions([]);
-      setIsModalOpen(false)
-    }
+  if (data) {
+    setTasks(sortTasks([data[0], ...tasks]));
+    setNewTaskName('');
+    setSelectedRecipeId(null);
+    setIsModalOpen(false);
+    setDuplicateError(false);
   }
+};
 
   // 2. CHANGER LE STATUT + LOG (Initiales dans l'historique)
   const toggleStatus = async (id: string, currentStatus: string, taskName: string) => {
@@ -304,6 +313,22 @@ const generateShoppingList = async () => {
                   </div>
                 )}
               </div>
+
+{/* MESSAGE D'ERREUR DOUBLON */}
+  {duplicateError && (
+    <motion.div 
+      initial={{ opacity: 0, y: -10 }} 
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-red-500/10 border border-red-500/20 p-3 rounded-xl mb-6 flex items-center gap-3"
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="3">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <span className="text-red-500 text-[10px] font-black uppercase tracking-widest">
+        Déjà dans la liste
+      </span>
+    </motion.div>
+  )}
 
               <div className="flex gap-3">
                 <button type="button"onClick={() => {
