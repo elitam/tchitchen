@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 const USERS_MAP: any = {
   "5368": { initials: "ET", role: "admin" },
-  "2410": { initials: "ZZ", role: "user" },
   "2512": { initials: "CR", role: "admin" },
   "3006": { initials: "ML", role: "user" },
   "1515": { initials: "TM", role: "user" }
