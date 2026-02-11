@@ -126,12 +126,27 @@ export default function Recettes() {
         ))}
       </div>
 
-      {/* BOUTON AJOUTER : Uniquement pour ADMIN */}
-      {user?.role === 'admin' && (
-        <Link href="/recettes/ajouter"
-          className="fixed bottom-28 right-6 w-16 h-16 bg-white text-black rounded-full text-4xl shadow-2xl flex items-center justify-center active:scale-90 transition-transform z-40"
-        > + </Link>
-      )}
+      {/* BOUTON + FLOTTANT STYLE IOS UNIFIÉ (Recettes) */}
+{user?.role === 'admin' && (
+  <Link 
+    href="/recettes/ajouter" 
+    className="fixed bottom-[calc(env(safe-area-inset-bottom)+130px)] right-6 w-16 h-16 rounded-full bg-zinc-100/90 backdrop-blur-md border border-white/20 shadow-lg shadow-black/30 flex items-center justify-center active:scale-95 transition-all z-40 group"
+  >
+    <svg 
+      width="32" 
+      height="32" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="black" 
+      strokeWidth="2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      className="group-active:scale-110 transition-transform"
+    >
+      <path d="M5 12h14"/><path d="M12 5v14"/>
+    </svg>
+  </Link>
+)}
 
       {/* NAVBAR BASSE UNIFIÉE - FINALE (MEP / FICHES / LOGS) */}
 <div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-xl border-t border-zinc-900 flex justify-around items-center z-50 
