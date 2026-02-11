@@ -110,7 +110,9 @@ export default function FicheRecette() {
           <div className="flex gap-3">
             {user?.role === 'admin' && (
               <>
-                <Link onClick={(e) => e.stopPropagation()} href={`/recettes/modifier/${id}`} className="bg-blue-600/80 backdrop-blur-md rounded-full p-2 shadow-lg">
+                <Link onClick={(e) => e.stopPropagation()} 
+  href={`/recettes/modifier/${id}${from === 'pass' ? '?from=pass' : ''}`} 
+                className="bg-blue-600/80 backdrop-blur-md rounded-full p-2 shadow-lg">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
                 </Link>
                 <button onClick={async (e) => {

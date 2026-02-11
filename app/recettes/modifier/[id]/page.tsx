@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { useRouter, useParams } from 'next/navigation'
 import { useAuth } from '@/app/context/AuthContext'
+import { useSearchParams } from 'next/navigation'
+
 
 
 const supabase = createClient(
@@ -27,6 +29,8 @@ export default function ModifierRecette() {
   const [instructions, setInstructions] = useState('')
   const [image, setImage] = useState<string | null>(null)
   const [ingredients, setIngredients] = useState([{ item: '', qty: 0, unit: 'g' }])
+  const searchParams = useSearchParams()
+const from = searchParams.get('from')
 
   // 1. CHARGEMENT DES DONNÉES EXISTANTES
   useEffect(() => {
@@ -102,6 +106,12 @@ export default function ModifierRecette() {
         image_url: image
       })
       .eq('id', id)
+
+if (!error) {
+    // On repart vers la fiche en gardant le paramètre 'from'
+    const nextPath = `/recettes/${id}${from === 'pass' ? '?from=pass' : ''}`
+    router.replace(nextPath)
+  }
 
     if (error) {
       alert("Erreur: " + error.message)
