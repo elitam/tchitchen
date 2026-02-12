@@ -134,7 +134,7 @@ export default function AjouterRecette() {
           {category === 'production' && (
             <div className="grid grid-cols-2 gap-4">
               <input 
-                type="number" step="0.1" value={baseYield} 
+                type="number" step="0.5" value={baseYield} 
                 onFocus={(e) => e.target.select()} 
                 onChange={(e) => setBaseYield(Number(e.target.value))}
                 className="w-full bg-zinc-900 p-4 rounded-2xl border border-zinc-800 outline-none text-xl font-black text-blue-500"
@@ -174,7 +174,7 @@ export default function AjouterRecette() {
         {/* 2. QTÉ : Largeur réduite à 65px */}
         <input 
           type="number" 
-          step="0.1" 
+          step="0.5" 
           value={ing.qty} 
           onFocus={(e) => e.target.select()} 
           onChange={(e) => updateIngredient(index, 'qty', Number(e.target.value))}
