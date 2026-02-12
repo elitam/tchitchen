@@ -160,18 +160,27 @@ export default function FicheRecette() {
       </span>
     </div>
 
-    {/* Le Slider - Plus fin et épuré */}
-    <div className="w-full">
-      <input 
-        type="range" 
-        min={minYield} 
-        max={maxYield} 
-        step={0.1}
-        value={yieldInput} 
-        onChange={(e) => setYieldInput(Number(e.target.value))}
-        className="ios-slider w-full h-1.5 bg-zinc-800 rounded-full appearance-none outline-none"
-      />
-    </div>
+    {/* Le Slider - Corrigé pour sauter par paliers de 0.5 */}
+<div className="w-full">
+  <input 
+    type="range" 
+    // On s'assure que le min et le max sont bien calés sur du 0.5
+    min={Math.round(minYield * 2) / 2} 
+    max={Math.round(maxYield * 2) / 2} 
+    step={0.5}
+    value={yieldInput} 
+    onChange={(e) => {
+      const rawValue = Number(e.target.value);
+      // Force l'arrondi au 0.5 le plus proche pour bloquer les valeurs intermédiaires
+      const snappedValue = Math.round(rawValue * 2) / 2;
+      if (snappedValue !== yieldInput && window.navigator.vibrate) {
+    window.navigator.vibrate(1); 
+  }
+      setYieldInput(snappedValue);
+    }}
+    className="ios-slider w-full h-1.5 bg-zinc-800 rounded-full appearance-none outline-none"
+  />
+</div>
 
     {/* Style CSS Injecté */}
     <style jsx>{`
