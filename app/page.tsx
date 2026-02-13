@@ -158,6 +158,19 @@ export default function Home() {
     }
   };
 
+  const togglePriority = async (id: string, currentOptional: boolean, taskName: string) => {
+  const nextOptional = !currentOptional;
+  // Update UI
+  setTasks(prev => prev.map(t => t.id === id ? { ...t, is_optional: nextOptional } : t));
+  // Update DB
+  await supabase.from('tasks').update({ is_optional: nextOptional }).eq('id', id);
+  // Log
+  await supabase.from('audit_logs').insert([{
+    user_name: user?.initials,
+    action: 'PRIORITÉ',
+    target_name: `${taskName} (${nextOptional ? 'Si temps' : 'Obligatoire'})`
+  }]);
+};
   const toggleStatus = async (id: string, currentStatus: string, taskName: string) => {
     const statusOrder = ['pending', 'in_progress', 'completed']
     const nextStatus = statusOrder[(statusOrder.indexOf(currentStatus) + 1) % statusOrder.length]
@@ -220,42 +233,59 @@ export default function Home() {
         <div className="space-y-3">
           <AnimatePresence mode="popLayout">
             {tasks.map((task) => (
-              <motion.div 
-                key={task.id}
-                layout
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className={`group w-full flex items-center p-5 border rounded-3xl transition-colors ${
-                  task.status === 'in_progress' ? 'bg-blue-600/10 border-blue-500/50' : 
-                  task.status === 'completed' ? 'bg-zinc-900/30 border-zinc-900 opacity-40' : 
-                  'bg-zinc-900 border-zinc-800'
-                }`}
-              >
-                <div className="flex-1 cursor-pointer" onClick={() => toggleStatus(task.id, task.status, task.display_name)}>
-                  <div className="flex items-center gap-3">
-                    <p className={`text-xl font-bold ${task.status === 'completed' ? 'line-through text-zinc-600' : 'text-white'}`}>
-                      {task.display_name}
-                    </p>
-                    {task.recipe_id && (
-                      <Link 
-                        href={`/recettes/${task.recipe_id}`}
-                        onClick={(e) => e.stopPropagation()}
-                        className="p-1.5 bg-blue-500/10 rounded-lg border border-blue-500/20"
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-                      </Link>
-                    )}
-                  </div>
-                  <p className={`text-[10px] font-black uppercase mt-1 ${task.status === 'in_progress' ? 'text-blue-400' : 'text-zinc-500'}`}>
-                    {STATUS_LABELS[task.status]}
-                  </p>
-                </div>
-                <button 
-                  onClick={() => { if(confirm(`Archiver "${task.display_name}" ?`)) deleteTask(task.id, task.display_name) }}
-                  className="ml-4 p-2 text-zinc-800 hover:text-red-500"
-                > ✕ </button>
-              </motion.div>
+             <motion.div 
+  key={task.id}
+  layout
+  initial={{ opacity: 0, scale: 0.95 }}
+  animate={{ opacity: 1, scale: 1 }}
+  exit={{ opacity: 0, scale: 0.95 }}
+  
+  // LOGIQUE LONG PRESS
+  onTapStart={() => {
+    // On crée un timer global temporaire
+    (window as any).lpTimer = setTimeout(() => {
+      togglePriority(task.id, task.is_optional, task.display_name);
+      if (navigator.vibrate) navigator.vibrate(40);
+    }, 600); // 600ms de pression pour déclencher
+  }}
+  onTap={() => clearTimeout((window as any).lpTimer)}
+  onTapCancel={() => clearTimeout((window as any).lpTimer)}
+
+  className={`group w-full flex items-center p-5 border rounded-3xl transition-all ${
+    task.status === 'in_progress' ? 'bg-blue-600/10 border-blue-500/50' : 
+    task.status === 'completed' ? 'bg-zinc-900/30 border-zinc-900 opacity-40' : 
+    'bg-zinc-900 border-zinc-800'
+  } ${task.is_optional ? 'border-dashed opacity-50 scale-[0.97]' : 'border-solid opacity-100'}`}
+>
+  <div className="flex-1 cursor-pointer" onClick={() => toggleStatus(task.id, task.status, task.display_name)}>
+    <div className="flex items-center gap-3">
+      {/* Petit indicateur visuel si optionnel */}
+      {task.is_optional && <span className="text-zinc-600">☁️</span>}
+      
+      <p className={`text-xl font-bold ${task.status === 'completed' ? 'line-through text-zinc-600' : 'text-white'}`}>
+        {task.display_name}
+      </p>
+      
+      {task.recipe_id && (
+        <Link 
+          href={`/recettes/${task.recipe_id}`}
+          onClick={(e) => e.stopPropagation()}
+          className="p-1.5 bg-blue-500/10 rounded-lg border border-blue-500/20"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+        </Link>
+      )}
+    </div>
+    <p className={`text-[10px] font-black uppercase mt-1 ${task.status === 'in_progress' ? 'text-blue-400' : 'text-zinc-500'}`}>
+      {STATUS_LABELS[task.status]} {task.is_optional && "• Si temps"}
+    </p>
+  </div>
+  
+  <button 
+    onClick={() => { if(confirm(`Archiver "${task.display_name}" ?`)) deleteTask(task.id, task.display_name) }}
+    className="ml-4 p-2 text-zinc-800 hover:text-red-500"
+  > ✕ </button>
+</motion.div>
             ))}
           </AnimatePresence>
         </div>
