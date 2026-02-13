@@ -82,10 +82,21 @@ export default function Home() {
     }
   }
 
-  const sortTasks = (list: any[]) => {
-    const priority: Record<string, number> = { 'in_progress': 0, 'pending': 1, 'completed': 2 };
-    return [...list].sort((a, b) => priority[a.status] - priority[b.status]);
-  };
+  // Logique de tri dynamique : Statut d'abord, puis Obligatoire vs Optionnel
+const sortTasks = (list: any[]) => {
+  const priority: Record<string, number> = { 'in_progress': 0, 'pending': 1, 'completed': 2 };
+
+  return [...list].sort((a, b) => {
+    // 1. Tri par statut (En cours > À faire > Terminé)
+    if (priority[a.status] !== priority[b.status]) {
+      return priority[a.status] - priority[b.status];
+    }
+    
+    // 2. Si même statut, mettre les Obligatoires (false) avant les Optionnelles (true)
+    // En JS : false = 0, true = 1. Donc (0 - 1) met le obligatoire en haut.
+    return (a.is_optional ? 1 : 0) - (b.is_optional ? 1 : 0);
+  });
+};
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -158,19 +169,23 @@ export default function Home() {
     }
   };
 
-  const togglePriority = async (id: string, currentOptional: boolean, taskName: string) => {
+ const togglePriority = async (id: string, currentOptional: boolean, taskName: string) => {
   const nextOptional = !currentOptional;
-  // Update UI
-  setTasks(prev => prev.map(t => t.id === id ? { ...t, is_optional: nextOptional } : t));
-  // Update DB
+  
+  // Mise à jour de l'UI avec le nouveau tri
+  setTasks(prev => sortTasks(prev.map(t => t.id === id ? { ...t, is_optional: nextOptional } : t)));
+  
+  // Update Supabase
   await supabase.from('tasks').update({ is_optional: nextOptional }).eq('id', id);
-  // Log
+
+  // Log Historique
   await supabase.from('audit_logs').insert([{
     user_name: user?.initials,
     action: 'PRIORITÉ',
-    target_name: `${taskName} (${nextOptional ? 'Si temps' : 'Obligatoire'})`
+    target_name: `${taskName} (${nextOptional ? 'Optionnel' : 'Obligatoire'})`
   }]);
 };
+
   const toggleStatus = async (id: string, currentStatus: string, taskName: string) => {
     const statusOrder = ['pending', 'in_progress', 'completed']
     const nextStatus = statusOrder[(statusOrder.indexOf(currentStatus) + 1) % statusOrder.length]
@@ -242,16 +257,17 @@ export default function Home() {
   
   // LOGIQUE LONG PRESS
   onTapStart={() => {
-    // On crée un timer global temporaire
     (window as any).lpTimer = setTimeout(() => {
       togglePriority(task.id, task.is_optional, task.display_name);
       if (navigator.vibrate) navigator.vibrate(40);
-    }, 600); // 600ms de pression pour déclencher
+    }, 600);
   }}
   onTap={() => clearTimeout((window as any).lpTimer)}
   onTapCancel={() => clearTimeout((window as any).lpTimer)}
 
-  className={`group w-full flex items-center p-5 border rounded-3xl transition-all ${
+  // CSS ANTI-SÉLECTION & ANTI-MENU IOS
+  style={{ WebkitTouchCallout: 'none' }} 
+  className={`group w-full flex items-center p-5 border rounded-3xl transition-all select-none touch-none ${
     task.status === 'in_progress' ? 'bg-blue-600/10 border-blue-500/50' : 
     task.status === 'completed' ? 'bg-zinc-900/30 border-zinc-900 opacity-40' : 
     'bg-zinc-900 border-zinc-800'
@@ -259,8 +275,8 @@ export default function Home() {
 >
   <div className="flex-1 cursor-pointer" onClick={() => toggleStatus(task.id, task.status, task.display_name)}>
     <div className="flex items-center gap-3">
-      {/* Petit indicateur visuel si optionnel */}
-      {task.is_optional && <span className="text-zinc-600">☁️</span>}
+      {/* Petit indicateur visuel discret */}
+      {task.is_optional && <span className="text-zinc-600 text-xs">☁️</span>}
       
       <p className={`text-xl font-bold ${task.status === 'completed' ? 'line-through text-zinc-600' : 'text-white'}`}>
         {task.display_name}
@@ -276,8 +292,10 @@ export default function Home() {
         </Link>
       )}
     </div>
+    
+    {/* LABEL MIS À JOUR : Optionnel */}
     <p className={`text-[10px] font-black uppercase mt-1 ${task.status === 'in_progress' ? 'text-blue-400' : 'text-zinc-500'}`}>
-      {STATUS_LABELS[task.status]} {task.is_optional && "• Si temps"}
+      {STATUS_LABELS[task.status]} {task.is_optional && "• Optionnel"}
     </p>
   </div>
   
