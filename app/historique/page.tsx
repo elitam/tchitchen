@@ -152,7 +152,7 @@ export default function HistoriquePage() {
         </div>
 
         <div className="space-y-3">
-          <p className="text-[9px] font-black text-zinc-700 uppercase tracking-[0.2em] px-1">Brigade</p>
+          <p className="text-[9px] font-black text-zinc-700 uppercase tracking-[0.2em] px-1">Employée</p>
           <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
             <FilterChip label="TOUT" active={filterUser === 'TOUT'} onClick={() => setFilterUser('TOUT')} />
             {uniqueUsers.map(u => (
