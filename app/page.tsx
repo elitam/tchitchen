@@ -191,9 +191,13 @@ export default function Home() {
         </div>
       </div>
 
-      {/* BOUTON + */}
-      <button onClick={() => setIsModalOpen(true)} className="fixed bottom-[calc(env(safe-area-inset-bottom)+130px)] right-6 w-16 h-16 rounded-full bg-zinc-100/90 backdrop-blur-md border border-white/20 shadow-lg flex items-center justify-center active:scale-95 z-40">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+      <button 
+        onClick={() => setIsModalOpen(true)} 
+        className="fixed bottom-[calc(env(safe-area-inset-bottom)+120px)] right-6 w-16 h-16 rounded-full bg-white text-black shadow-2xl flex items-center justify-center active:scale-90 z-40 transition-transform"
+      >
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
       </button>
 
       {/* MODAL AJOUT */}
