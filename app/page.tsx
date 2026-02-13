@@ -32,6 +32,7 @@ export default function Home() {
   const [shoppingList, setShoppingList] = useState<any[]>([])
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({})
 
+  // REFS POUR SÉPARER TAP ET LONG PRESS
   const longPressTriggered = useRef(false)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -59,7 +60,13 @@ export default function Home() {
     });
   };
 
-  // --- ACTIONS ---
+  const toggleStatus = async (id: string, currentStatus: string, taskName: string) => {
+    const statusOrder = ['pending', 'in_progress', 'completed']
+    const nextStatus = statusOrder[(statusOrder.indexOf(currentStatus) + 1) % statusOrder.length]
+    setTasks(prev => sortTasks(prev.map(t => t.id === id ? { ...t, status: nextStatus } : t)))
+    await supabase.from('tasks').update({ status: nextStatus }).eq('id', id)
+    await supabase.from('audit_logs').insert([{ user_name: user?.initials, action: 'STATUT', target_name: `${taskName} (${STATUS_LABELS[nextStatus]})` }])
+  }
 
   const togglePriority = async (id: string, currentOptional: boolean, taskName: string) => {
     const nextOptional = !currentOptional
@@ -68,11 +75,20 @@ export default function Home() {
     await supabase.from('audit_logs').insert([{ user_name: user?.initials, action: 'PRIORITÉ', target_name: `${taskName} (${nextOptional ? 'Optionnel' : 'Obligatoire'})` }])
   }
 
-  const toggleStatus = async (id: string, currentStatus: string, taskName: string) => {
-    const statusOrder = ['pending', 'in_progress', 'completed']
-    const nextStatus = statusOrder[(statusOrder.indexOf(currentStatus) + 1) % statusOrder.length]
-    setTasks(prev => sortTasks(prev.map(t => t.id === id ? { ...t, status: nextStatus } : t)))
-    await supabase.from('tasks').update({ status: nextStatus }).eq('id', id)
+  const handlePointerDown = (task: any) => {
+    longPressTriggered.current = false
+    timerRef.current = setTimeout(() => {
+      togglePriority(task.id, task.is_optional, task.display_name)
+      if (navigator.vibrate) navigator.vibrate(40)
+      longPressTriggered.current = true
+    }, 500) // 500ms
+  }
+
+  const handlePointerUp = (task: any) => {
+    if (timerRef.current) clearTimeout(timerRef.current)
+    if (!longPressTriggered.current) {
+      toggleStatus(task.id, task.status, task.display_name)
+    }
   }
 
   const deleteTask = async (id: string, taskName: string) => {
@@ -89,33 +105,12 @@ export default function Home() {
     const name = newTaskName.trim()
     if (!name) return
     if (tasks.some(t => t.display_name.toLowerCase().trim() === name.toLowerCase())) {
-      setDuplicateError(true); 
-      setTimeout(() => setDuplicateError(false), 3000); 
-      return
+      setDuplicateError(true); setTimeout(() => setDuplicateError(false), 3000); return
     }
     const { data } = await supabase.from('tasks').insert([{ display_name: name, status: 'pending', recipe_id: selectedRecipeId }]).select()
     if (data) {
       setTasks(sortTasks([data[0], ...tasks]))
-      setNewTaskName(''); 
-      setSelectedRecipeId(null); 
-      setIsModalOpen(false)
-    }
-  }
-
-  // --- LOGIQUE GESTES ---
-  const handlePointerDown = (task: any) => {
-    longPressTriggered.current = false
-    timerRef.current = setTimeout(() => {
-      togglePriority(task.id, task.is_optional, task.display_name)
-      longPressTriggered.current = true
-      if (navigator.vibrate) navigator.vibrate(40)
-    }, 500)
-  }
-
-  const handlePointerUp = (task: any) => {
-    if (timerRef.current) clearTimeout(timerRef.current)
-    if (!longPressTriggered.current) {
-      toggleStatus(task.id, task.status, task.display_name)
+      setNewTaskName(''); setSelectedRecipeId(null); setIsModalOpen(false)
     }
   }
 
@@ -124,10 +119,10 @@ export default function Home() {
       
       {/* HEADER */}
       <div className="flex justify-between items-center mb-10">
-        <h1 className="text-4xl font-black tracking-tighter uppercase italic">Tchitchen</h1>
-        <div className="w-10 h-10 bg-zinc-900 rounded-full flex items-center justify-center border border-zinc-800">
+        <h1 className="text-4xl font-black tracking-tighter uppercase">Tchitchen</h1>
+        <button onClick={() => { if(confirm("Se déconnecter ?")) logout() }} className="w-10 h-10 bg-zinc-900 rounded-full flex items-center justify-center border border-zinc-800">
            <span className="text-[10px] font-black text-blue-400 uppercase">{user?.initials || '..'}</span>
-        </div>
+        </button>
       </div>
 
       {/* MISE EN PLACE */}
@@ -135,18 +130,21 @@ export default function Home() {
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-[10px] font-black text-zinc-700 uppercase tracking-[0.3em]">Mise en place</h2>
           <button onClick={async () => {
-             const ids = tasks.filter(t => t.status === 'in_progress' && t.recipe_id).map(t => t.recipe_id)
-             if (ids.length === 0) return
-             const { data } = await supabase.from('recipes').select('ingredients').in('id', ids)
-             if (!data) return
-             const aggregated: Record<string, any> = {}
-             data.forEach(r => r.ingredients?.forEach((ing: any) => {
-               const key = `${ing.item}-${ing.unit}`.toLowerCase()
-               if (aggregated[key]) aggregated[key].qty += Number(ing.qty)
-               else aggregated[key] = { ...ing, qty: Number(ing.qty) }
-             }))
-             setShoppingList(Object.values(aggregated)); setIsShoppingListOpen(true)
-          }} className="bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-full text-[10px] font-black uppercase text-zinc-500">Réassort</button>
+            const ids = tasks.filter(t => t.status === 'in_progress' && t.recipe_id).map(t => t.recipe_id)
+            if (ids.length === 0) return
+            const { data } = await supabase.from('recipes').select('ingredients').in('id', ids)
+            if (!data) return
+            const aggregated: Record<string, any> = {}
+            data.forEach(r => r.ingredients?.forEach((ing: any) => {
+              const key = `${ing.item}-${ing.unit}`.toLowerCase()
+              if (aggregated[key]) aggregated[key].qty += Number(ing.qty)
+              else aggregated[key] = { ...ing, qty: Number(ing.qty) }
+            }))
+            setShoppingList(Object.values(aggregated)); setIsShoppingListOpen(true)
+          }} disabled={!tasks.some(t => t.status === 'in_progress' && t.recipe_id)} className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all ${tasks.some(t => t.status === 'in_progress' && t.recipe_id) ? 'bg-blue-500/10 border-blue-500/50 text-blue-400 animate-pulse' : 'bg-zinc-900 border-zinc-800 text-zinc-700 opacity-50'}`}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M20 7H4M20 12H4M20 17H4"/></svg>
+            <span className="text-[10px] font-black uppercase">Réassort</span>
+          </button>
         </div>
         
         <div className="space-y-3">
@@ -155,25 +153,21 @@ export default function Home() {
               <motion.div 
                 key={task.id}
                 layout
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ 
-                  layout: { 
-                    type: "tween", 
-                    ease: [0.4, 0, 0.2, 1], 
-                    duration: 0.18 
-                  }
-                }}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                
+                // GESTION DES GESTES (Séparés par Pointer pour éviter les conflits)
                 onPointerDown={() => handlePointerDown(task)}
                 onPointerUp={() => handlePointerUp(task)}
                 onPointerCancel={() => { if (timerRef.current) clearTimeout(timerRef.current) }}
-                style={{ WebkitTouchCallout: 'none', userSelect: 'none', touchAction: 'pan-y' }} 
-                className={`w-full flex items-center p-5 border rounded-3xl transition-all select-none ${
+
+                style={{ WebkitTouchCallout: 'none', userSelect: 'none' }} 
+                className={`group w-full flex items-center p-5 border rounded-3xl transition-all select-none ${
                   task.status === 'in_progress' ? 'bg-blue-600/10 border-blue-500/50' : 
                   task.status === 'completed' ? 'bg-zinc-900/30 border-zinc-900 opacity-40' : 
                   'bg-zinc-900 border-zinc-800'
-                } ${task.is_optional ? 'border-dashed opacity-50' : 'border-solid opacity-100'}`}
+                } ${task.is_optional ? 'border-dashed opacity-50 scale-[0.98]' : 'border-solid opacity-100'}`}
               >
                 <div className="flex-1">
                   <div className="flex items-center gap-3">
@@ -190,11 +184,7 @@ export default function Home() {
                     {STATUS_LABELS[task.status]} {task.is_optional && "• Optionnel"}
                   </p>
                 </div>
-                {/* BOUTON SUPPRIMER (RÉINTRODUIT) */}
-                <button 
-                  onClick={(e) => { e.stopPropagation(); deleteTask(task.id, task.display_name); }} 
-                  className="ml-4 p-2 text-zinc-800 hover:text-red-500"
-                > ✕ </button>
+                <button onClick={(e) => { e.stopPropagation(); deleteTask(task.id, task.display_name); }} className="ml-4 p-2 text-zinc-800 hover:text-red-500"> ✕ </button>
               </motion.div>
             ))}
           </AnimatePresence>
@@ -202,47 +192,107 @@ export default function Home() {
       </div>
 
       {/* BOUTON + */}
-      <button onClick={() => setIsModalOpen(true)} className="fixed bottom-32 right-6 w-16 h-16 rounded-full bg-white text-black shadow-2xl flex items-center justify-center active:scale-90 z-40 transition-transform">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M12 5v14M5 12h14"/></svg>
+      <button onClick={() => setIsModalOpen(true)} className="fixed bottom-[calc(env(safe-area-inset-bottom)+130px)] right-6 w-16 h-16 rounded-full bg-zinc-100/90 backdrop-blur-md border border-white/20 shadow-lg flex items-center justify-center active:scale-95 z-40">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
       </button>
 
-      {/* MODAL */}
+      {/* MODAL AJOUT */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[200] flex items-center justify-center p-6">
-           <div className="bg-zinc-900 border border-zinc-800 w-full max-w-sm p-8 rounded-[2.5rem] relative">
-              <h2 className="text-xl font-black mb-6 uppercase tracking-tighter italic text-zinc-500">Nouvelle Tâche</h2>
-              <form onSubmit={addTask}>
-                <input autoFocus type="text" value={newTaskName} onChange={(e) => {
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
+          <div className="bg-zinc-900 border border-zinc-800 w-full max-w-md p-8 rounded-[2.5rem] shadow-2xl relative">
+            <h2 className="text-2xl font-black mb-6 uppercase">Nouvelle tâche</h2>
+            <form onSubmit={addTask}>
+              <div className="relative mb-6">
+                <input autoFocus type="text" placeholder="Ex: Tailler..." value={newTaskName} onChange={(e) => {
                   setNewTaskName(e.target.value);
+                  setDuplicateError(false);
                   if (e.target.value.length > 1) {
                     setSuggestions(allRecipes.filter(r => r.title.toLowerCase().includes(e.target.value.toLowerCase())).slice(0, 4))
                   } else setSuggestions([])
-                }} className="w-full bg-black border border-zinc-800 p-5 rounded-2xl text-white outline-none focus:border-blue-500 mb-4" />
-                
+                }} className="w-full bg-zinc-800 border border-zinc-700 p-5 rounded-2xl text-white outline-none focus:border-blue-500" />
                 {suggestions.length > 0 && (
-                  <div className="bg-zinc-800 rounded-xl overflow-hidden mb-4">
-                    {suggestions.map(r => (
-                      <button key={r.id} type="button" onClick={() => { setNewTaskName(r.title); setSelectedRecipeId(r.id); setSuggestions([]); }} className="w-full p-3 text-left border-b border-zinc-700 text-sm font-bold">{r.title}</button>
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-zinc-800 border border-zinc-700 rounded-2xl overflow-hidden z-[110]">
+                    {suggestions.map(recipe => (
+                      <button key={recipe.id} type="button" onClick={() => { setNewTaskName(recipe.title); setSelectedRecipeId(recipe.id); setSuggestions([]); }} className="w-full p-4 text-left hover:bg-zinc-700 border-b border-zinc-700 last:border-0 flex justify-between items-center">
+                        <span className="text-sm font-bold text-white">{recipe.title}</span>
+                        <span className="text-[9px] font-black text-blue-400 uppercase">Lier</span>
+                      </button>
                     ))}
                   </div>
                 )}
-
-                <div className="flex gap-2">
-                  <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 p-4 font-bold text-zinc-600">Fermer</button>
-                  <button type="submit" className="flex-1 bg-white text-black p-4 rounded-xl font-black uppercase text-xs">Ajouter</button>
-                </div>
-              </form>
-           </div>
+              </div>
+              {duplicateError && <div className="text-red-500 text-[10px] font-black uppercase mb-4 text-center tracking-widest">Déjà dans la liste</div>}
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 p-4 font-bold text-zinc-500">Annuler</button>
+                <button type="submit" className="flex-1 bg-white text-black p-4 rounded-xl font-black uppercase text-xs">Ajouter</button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
       {/* NAVBAR BASSE */}
-      <div className="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur-xl border-t border-zinc-900 flex justify-around items-center pt-3 pb-8 px-6">
-        <Link href="/" className="flex flex-col items-center gap-1 opacity-100"><div className="text-blue-500"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><span className="text-[8px] font-black uppercase tracking-[0.2em]">MEP</span></Link>
-        <Link href="/recettes" className="flex flex-col items-center gap-1 opacity-40"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span className="text-[8px] font-black uppercase tracking-[0.2em]">Fiches</span></Link>
-        <Link href="/historique" className="flex flex-col items-center gap-1 opacity-40"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span className="text-[8px] font-black uppercase tracking-[0.2em]">Logs</span></Link>
+      <div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-xl border-t border-zinc-900 flex justify-around items-center z-50 pt-3 pb-[calc(env(safe-area-inset-bottom)+10px)] px-6">
+        <Link href="/" className="flex flex-col items-center gap-1">
+          <div className={`p-1 ${pathname === '/' ? 'text-blue-500' : 'text-zinc-600'}`}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z"/><line x1="6" y1="17" x2="18" y2="17"/></svg>
+          </div>
+          <span className="text-[9px] font-black uppercase tracking-widest">MEP</span>
+        </Link>
+        <Link href="/recettes" className="flex flex-col items-center gap-1">
+          <div className={`p-1 ${pathname.includes('/recettes') ? 'text-blue-500' : 'text-zinc-600'}`}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          </div>
+          <span className="text-[9px] font-black uppercase tracking-widest">Fiches</span>
+        </Link>
+        <Link href="/historique" className="flex flex-col items-center gap-1">
+          <div className={`p-1 ${pathname === '/historique' ? 'text-blue-500' : 'text-zinc-600'}`}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+          </div>
+          <span className="text-[9px] font-black uppercase tracking-widest">Logs</span>
+        </Link>
       </div>
 
+      {/* DRAWER RÉASSORT */}
+      <AnimatePresence>
+        {isShoppingListOpen && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsShoppingListOpen(false)} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150]" />
+            <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} className="fixed bottom-0 left-0 right-0 bg-zinc-900 border-t border-zinc-800 rounded-t-[2.5rem] z-[160] max-h-[80vh] overflow-y-auto pb-10">
+              <div className="w-12 h-1.5 bg-zinc-800 rounded-full mx-auto mt-4 mb-8" />
+              <div className="px-8">
+                <div className="flex justify-between items-center mb-8">
+                  <h3 className="text-2xl font-black uppercase">Réassort</h3>
+                  <button onClick={() => setIsShoppingListOpen(false)} className="text-zinc-500 font-bold">OK</button>
+                </div>
+                <div className="space-y-3">
+                  {shoppingList.map((ing, i) => {
+                    const key = `${ing.item}-${ing.unit}`.toLowerCase();
+                    const isChecked = checkedItems[key];
+                    return (
+                      <div key={i} onClick={() => {
+                        const k = `${ing.item}-${ing.unit}`.toLowerCase();
+                        setCheckedItems(prev => ({ ...prev, [k]: !prev[k] }));
+                      }} className={`flex justify-between items-center p-5 rounded-2xl border transition-all active:scale-95 ${isChecked ? 'bg-zinc-900 border-zinc-800 opacity-30' : 'bg-zinc-800 border-zinc-700'}`}>
+                        <div className="flex items-center gap-4">
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isChecked ? 'bg-blue-500 border-blue-500' : 'border-zinc-600'}`}>
+                            {isChecked && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4"><path d="M20 6L9 17l-5-5"/></svg>}
+                          </div>
+                          <span className={`font-bold uppercase text-sm ${isChecked ? 'line-through' : ''}`}>{ing.item}</span>
+                        </div>
+                        <div className="flex gap-2 items-baseline">
+                          <span className="font-black text-xl">{ing.qty}</span>
+                          <span className="text-zinc-500 text-[10px] uppercase">{ing.unit}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </main>
   );
 }
