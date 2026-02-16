@@ -181,10 +181,17 @@ export default function Home() {
                       {task.display_name}
                     </p>
                     {task.recipe_id && (
-                      <Link href={`/recettes/${task.recipe_id}`} onClick={(e) => e.stopPropagation()} className="p-1.5 bg-blue-500/10 rounded-lg border border-blue-500/20">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-                      </Link>
-                    )}
+  <Link 
+    href={`/recettes/${task.recipe_id}?from=home`} // On ajoute le paramètre ici
+    onClick={(e) => e.stopPropagation()}
+    className="p-1.5 bg-blue-500/10 rounded-lg border border-blue-500/20"
+  >
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5">
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+    </svg>
+  </Link>
+)}
                   </div>
                   <p className={`text-[10px] font-black uppercase mt-1 ${task.status === 'in_progress' ? 'text-blue-400' : 'text-zinc-500'}`}>
                     {STATUS_LABELS[task.status]} {task.is_optional && "• Optionnel"}

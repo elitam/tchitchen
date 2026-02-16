@@ -7,7 +7,6 @@ import { useAuth } from '@/app/context/AuthContext'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSearchParams } from 'next/navigation'
 
-
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -25,8 +24,15 @@ export default function FicheRecette() {
   const [loading, setLoading] = useState(true)
 
   const searchParams = useSearchParams()
-  const from = searchParams.get('from') // Récupère "pass" si présent
-  const backHref = from === 'pass' ? '/recettes?tab=pass' : '/recettes'
+  const from = searchParams.get('from')
+
+  // --- LOGIQUE DE RETOUR AMÉLIORÉE ---
+  const getBackHref = () => {
+    if (from === 'pass') return '/recettes?tab=pass'
+    if (from === 'home') return '/' // Ajout du retour à l'accueil
+    return '/recettes'
+  }
+  const backHref = getBackHref()
 
   useEffect(() => {
     if (!id) return
@@ -95,25 +101,28 @@ export default function FicheRecette() {
         {/* Boutons de navigation */}
         <div className="absolute top-0 w-full p-6 flex justify-between items-start pt-[calc(env(safe-area-inset-top)+10px)] z-50">
           
-          
-          
           <Link 
-  href={backHref} 
-  onClick={(e) => e.stopPropagation()} 
-  className="bg-black/40 backdrop-blur-md rounded-full p-2 border border-white/10 inline-flex items-center justify-center"
->
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-    <path d="m15 18-6-6 6-6"/>
-  </svg>
-</Link>
+            href={backHref} 
+            onClick={(e) => e.stopPropagation()} 
+            className="bg-black/40 backdrop-blur-md rounded-full p-2 border border-white/10 inline-flex items-center justify-center"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+              <path d="m15 18-6-6 6-6"/>
+            </svg>
+          </Link>
           
           <div className="flex gap-3">
             {user?.role === 'admin' && (
               <>
-                <Link onClick={(e) => e.stopPropagation()} 
-  href={`/recettes/modifier/${id}${from === 'pass' ? '?from=pass' : ''}`} 
-                className="bg-blue-600/80 backdrop-blur-md rounded-full p-2 shadow-lg">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                <Link 
+                  onClick={(e) => e.stopPropagation()} 
+                  // On transmet le contexte "from" à la page de modification
+                  href={`/recettes/modifier/${id}${from ? `?from=${from}` : ''}`} 
+                  className="bg-blue-600/80 backdrop-blur-md rounded-full p-2 shadow-lg"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+                  </svg>
                 </Link>
                 <button onClick={async (e) => {
                    e.stopPropagation();
@@ -122,7 +131,9 @@ export default function FicheRecette() {
                      router.push('/recettes')
                    }
                 }} className="bg-black/40 backdrop-blur-md rounded-full p-2 border border-white/10">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                    <path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                  </svg>
                 </button>
               </>
             )}
@@ -142,106 +153,96 @@ export default function FicheRecette() {
 
       <div className="p-8 space-y-12">
         {/* CALCULATEUR STYLE IOS COMPACT */}
-{recipe.category === 'production' && (
-  <div className="flex flex-col items-center bg-zinc-900/40 py-5 px-6 rounded-[2rem] border border-zinc-800/50 shadow-inner mb-8">
-    
-    {/* Affichage du Chiffre - Marges réduites */}
-    <div className="flex items-baseline gap-2 mb-4">
-      <motion.span 
-        key={yieldInput}
-        initial={{ scale: 0.95, opacity: 0.9 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="text-5xl font-black text-blue-500 tracking-tighter"
-      >
-        {yieldInput.toFixed(recipe.unit === 'portion' ? 0 : 1)}
-      </motion.span>
-      <span className="text-lg font-black text-blue-500/40 uppercase tracking-widest">
-        {recipe.unit || 'kg'}
-      </span>
-    </div>
-
-    {/* Le Slider - Corrigé pour sauter par paliers de 0.5 */}
-<div className="w-full">
-  <input 
-    type="range" 
-    // On s'assure que le min et le max sont bien calés sur du 0.5
-    min={Math.round(minYield * 2) / 2} 
-    max={Math.round(maxYield * 2) / 2} 
-    step={0.5}
-    value={yieldInput} 
-    onChange={(e) => {
-      const rawValue = Number(e.target.value);
-      // Force l'arrondi au 0.5 le plus proche pour bloquer les valeurs intermédiaires
-      const snappedValue = Math.round(rawValue * 2) / 2;
-      if (snappedValue !== yieldInput && window.navigator.vibrate) {
-    window.navigator.vibrate(1); 
-  }
-      setYieldInput(snappedValue);
-    }}
-    className="ios-slider w-full h-1.5 bg-zinc-800 rounded-full appearance-none outline-none"
-  />
-</div>
-
-    {/* Style CSS Injecté */}
-    <style jsx>{`
-      .ios-slider::-webkit-slider-thumb {
-        appearance: none;
-        width: 26px;
-        height: 26px;
-        background: white;
-        border-radius: 50%;
-        cursor: pointer;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        border: 0.5px solid rgba(0,0,0,0.1);
-        transition: transform 0.1s ease-in-out;
-      }
-      .ios-slider:active::-webkit-slider-thumb {
-        transform: scale(1.15);
-      }
-      .ios-slider::-moz-range-thumb {
-        width: 26px;
-        height: 26px;
-        background: white;
-        border-radius: 50%;
-        border: none;
-      }
-    `}</style>
-  </div>
-)}
-       {/* INGRÉDIENTS STYLE IOS LISIBLE */}
-{recipe.category === 'production' && recipe.ingredients && (
-  <div className="space-y-6">
-    <h2 className="text-[11px] font-black text-zinc-700 uppercase tracking-[0.3em] px-1">
-      Mise en place
-    </h2>
-    
-    <div className="space-y-2">
-      {recipe.ingredients.map((ing: any, i: number) => {
-        const ratio = yieldInput / (recipe.base_yield || 1)
-        const calculatedQty = (ing.qty * ratio).toFixed(ing.qty * ratio < 10 ? 1 : 0)
-        
-        return (
-          <div key={i} className="flex justify-between items-baseline bg-zinc-900/20 p-4 rounded-2xl border-b border-zinc-900/50">
-            {/* Nom de l'ingrédient - Plus grand et clair */}
-            <span className="text-zinc-300 font-bold text-[16px] uppercase tracking-tight">
-              {ing.item}
-            </span>
+        {recipe.category === 'production' && (
+          <div className="flex flex-col items-center bg-zinc-900/40 py-5 px-6 rounded-[2rem] border border-zinc-800/50 shadow-inner mb-8">
             
-            {/* Quantité et Unité - Block compact et contrasté */}
-            <div className="flex gap-1.5 items-baseline">
-              <span className="text-white font-black text-2xl tracking-tighter">
-                {calculatedQty}
-              </span>
-              <span className="text-zinc-500 text-xs font-black uppercase tracking-widest">
-                {ing.unit}
+            <div className="flex items-baseline gap-2 mb-4">
+              <motion.span 
+                key={yieldInput}
+                initial={{ scale: 0.95, opacity: 0.9 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="text-5xl font-black text-blue-500 tracking-tighter"
+              >
+                {yieldInput.toFixed(recipe.unit === 'portion' ? 0 : 1)}
+              </motion.span>
+              <span className="text-lg font-black text-blue-500/40 uppercase tracking-widest">
+                {recipe.unit || 'kg'}
               </span>
             </div>
+
+            <div className="w-full">
+              <input 
+                type="range" 
+                min={Math.round(minYield * 2) / 2} 
+                max={Math.round(maxYield * 2) / 2} 
+                step={0.5}
+                value={yieldInput} 
+                onChange={(e) => {
+                  const snappedValue = Math.round(Number(e.target.value) * 2) / 2;
+                  if (snappedValue !== yieldInput && window.navigator.vibrate) {
+                    window.navigator.vibrate(1); 
+                  }
+                  setYieldInput(snappedValue);
+                }}
+                className="ios-slider w-full h-1.5 bg-zinc-800 rounded-full appearance-none outline-none"
+              />
+            </div>
+
+            <style jsx>{`
+              .ios-slider::-webkit-slider-thumb {
+                appearance: none;
+                width: 26px;
+                height: 26px;
+                background: white;
+                border-radius: 50%;
+                cursor: pointer;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+                border: 0.5px solid rgba(0,0,0,0.1);
+                transition: transform 0.1s ease-in-out;
+              }
+              .ios-slider:active::-webkit-slider-thumb {
+                transform: scale(1.15);
+              }
+              .ios-slider::-moz-range-thumb {
+                width: 26px;
+                height: 26px;
+                background: white;
+                border-radius: 50%;
+                border: none;
+              }
+            `}</style>
           </div>
-        )
-      })}
-    </div>
-  </div>
-)}
+        )}
+
+        {/* INGRÉDIENTS */}
+        {recipe.category === 'production' && recipe.ingredients && (
+          <div className="space-y-6">
+            <h2 className="text-[11px] font-black text-zinc-700 uppercase tracking-[0.3em] px-1">
+              Mise en place
+            </h2>
+            <div className="space-y-2">
+              {recipe.ingredients.map((ing: any, i: number) => {
+                const ratio = yieldInput / (recipe.base_yield || 1)
+                const calculatedQty = (ing.qty * ratio).toFixed(ing.qty * ratio < 10 ? 1 : 0)
+                return (
+                  <div key={i} className="flex justify-between items-baseline bg-zinc-900/20 p-4 rounded-2xl border-b border-zinc-900/50">
+                    <span className="text-zinc-300 font-bold text-[16px] uppercase tracking-tight">
+                      {ing.item}
+                    </span>
+                    <div className="flex gap-1.5 items-baseline">
+                      <span className="text-white font-black text-2xl tracking-tighter">
+                        {calculatedQty}
+                      </span>
+                      <span className="text-zinc-500 text-xs font-black uppercase tracking-widest">
+                        {ing.unit}
+                      </span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         {/* PROCÉDÉ */}
         <div className="space-y-6 pb-20">
