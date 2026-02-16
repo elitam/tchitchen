@@ -102,18 +102,42 @@ export default function Home() {
   }
 
   const addTask = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const name = newTaskName.trim()
-    if (!name) return
-    if (tasks.some(t => t.display_name.toLowerCase().trim() === name.toLowerCase())) {
-      setDuplicateError(true); setTimeout(() => setDuplicateError(false), 3000); return
-    }
-    const { data } = await supabase.from('tasks').insert([{ display_name: name, status: 'pending', recipe_id: selectedRecipeId }]).select()
-    if (data) {
-      setTasks(sortTasks([data[0], ...tasks]))
-      setNewTaskName(''); setSelectedRecipeId(null); setIsModalOpen(false)
-    }
+  e.preventDefault()
+  const name = newTaskName.trim()
+  if (!name) return
+
+  // Vérification des doublons
+  if (tasks.some(t => t.display_name.toLowerCase().trim() === name.toLowerCase())) {
+    setDuplicateError(true); 
+    setTimeout(() => setDuplicateError(false), 3000); 
+    return
   }
+
+  // 1. Insertion de la tâche dans la table 'tasks'
+  const { data } = await supabase
+    .from('tasks')
+    .insert([{ 
+      display_name: name, 
+      status: 'pending', 
+      recipe_id: selectedRecipeId 
+    }])
+    .select()
+
+  if (data) {
+    // 2. ENVOI DU LOG DANS LA DATABASE (Ce qui manquait)
+    await supabase.from('audit_logs').insert([{
+      user_name: user?.initials, // Utilise les initiales de l'utilisateur connecté
+      action: 'AJOUT',           // Action en majuscules pour ton filtrage
+      target_name: name          // Nom de la tâche créée
+    }])
+
+    // Mise à jour de l'interface
+    setTasks(sortTasks([data[0], ...tasks]))
+    setNewTaskName('')
+    setSelectedRecipeId(null)
+    setIsModalOpen(false)
+  }
+}
 
   return (
     <main className="min-h-screen bg-black text-white p-6 pt-[calc(env(safe-area-inset-top)+20px)] pb-40">
