@@ -10,6 +10,7 @@ import { usePathname } from 'next/navigation'
 import { useSearchParams } from 'next/navigation'
 
 
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -115,7 +116,16 @@ const [view, setView] = useState<'production' | 'plating'>(tabParam === 'pass' ?
 </div>
 
       <div className="grid grid-cols-2 gap-4">
+        <AnimatePresence mode="popLayout">
         {filteredRecipes.map((recipe) => (
+          <motion.div
+        key={recipe.id}
+        layout
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.2 }}
+      >
           <Link href={`/recettes/${recipe.id}${view === 'plating' ? '?from=pass' : ''}`} 
   key={recipe.id}
             className="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden active:scale-95 transition-transform"
@@ -132,7 +142,9 @@ const [view, setView] = useState<'production' | 'plating'>(tabParam === 'pass' ?
               <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">{recipe.station || 'Général'}</p>
             </div>
           </Link>
+          </motion.div>
         ))}
+        </AnimatePresence>
       </div>
 
       {/* BOUTON + FLOTTANT STYLE IOS UNIFIÉ (Recettes) */}

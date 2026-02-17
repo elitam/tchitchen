@@ -6,6 +6,8 @@ import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
 import { useAuth } from '@/app/context/AuthContext'
 import { usePathname } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
+
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -169,8 +171,15 @@ export default function HistoriquePage() {
         ) : Object.keys(groupedLogs).length === 0 ? (
           <p className="text-zinc-600 italic text-center py-20 uppercase text-[10px] tracking-widest">Aucune activité.</p>
         ) : (
-          Object.keys(groupedLogs).map((date) => (
-            <div key={date} className="space-y-4">
+          <AnimatePresence>
+      {Object.keys(groupedLogs).map((date) => (
+        <motion.div 
+          key={date}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="space-y-4"
+        >
               <h3 className="text-[10px] font-black text-zinc-800 uppercase tracking-[0.3em] border-b border-zinc-900 pb-2">
                 {date}
               </h3>
@@ -198,8 +207,11 @@ export default function HistoriquePage() {
                   </div>
                 ))}
               </div>
-            </div>
-          ))
+              
+            </motion.div>
+            
+          ))}
+    </AnimatePresence>
         )}
       </div>
 
