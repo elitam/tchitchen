@@ -30,7 +30,7 @@ export default function HistoriquePage() {
           .from('audit_logs')
           .select('*')
           .order('created_at', { ascending: false })
-          .limit(100)
+          .limit(1000)
         if (data) setLogs(data)
       } catch (err) {
         console.error(err)
