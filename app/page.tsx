@@ -197,7 +197,7 @@ export default function Home() {
                   task.status === 'in_progress' ? 'bg-blue-600/10 border-blue-500/50' : 
                   task.status === 'completed' ? 'bg-zinc-900/30 border-zinc-900 opacity-40' : 
                   'bg-zinc-900 border-zinc-800'
-                } ${task.is_optional ? 'border-dashed opacity-50 scale-[0.98]' : 'border-solid opacity-100'}`}
+                } ${task.is_optional ? 'border-dashed border-2 opacity-60' : 'border-solid opacity-100'}`}
               >
                 <div className="flex-1">
                   <div className="flex items-center gap-3">
