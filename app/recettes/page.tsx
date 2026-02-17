@@ -116,25 +116,34 @@ const [view, setView] = useState<'production' | 'plating'>(tabParam === 'pass' ?
 </div>
 
       <div className="grid grid-cols-2 gap-4">
-        {filteredRecipes.map((recipe) => (
-          <Link href={`/recettes/${recipe.id}${view === 'plating' ? '?from=pass' : ''}`} 
-  key={recipe.id}
-            className="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden active:scale-95 transition-transform"
-          >
-            <div className="aspect-square bg-zinc-800 relative">
-              {recipe.image_url ? (
-                <img src={recipe.image_url} alt="" className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-zinc-700 text-4xl">🍲</div>
-              )}
-            </div>
-            <div className="p-4">
-              <h3 className="font-bold text-lg leading-tight mb-1">{recipe.title || 'Sans titre'}</h3>
-              <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">{recipe.station || 'Général'}</p>
-            </div>
-          </Link>
-        ))}
-      </div>
+  <AnimatePresence>
+    {filteredRecipes.map((recipe) => (
+      <motion.div
+        key={recipe.id}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <Link 
+          href={`/recettes/${recipe.id}${view === 'plating' ? '?from=pass' : ''}`} 
+          className="block bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden active:scale-95 transition-transform"
+        >
+          <div className="aspect-square bg-zinc-800 relative">
+            {recipe.image_url ? (
+              <img src={recipe.image_url} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-zinc-700 text-4xl">🍲</div>
+            )}
+          </div>
+          <div className="p-4">
+            <h3 className="font-bold text-lg leading-tight mb-1">{recipe.title || 'Sans titre'}</h3>
+            <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">{recipe.station || 'Général'}</p>
+          </div>
+        </Link>
+      </motion.div>
+    ))}
+  </AnimatePresence>
+</div>
 
       {/* BOUTON + FLOTTANT STYLE IOS UNIFIÉ (Recettes) */}
 {user?.role === 'admin' && (
