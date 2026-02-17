@@ -4,6 +4,8 @@ import { createClient } from '@supabase/supabase-js'
 import { useRouter, useParams } from 'next/navigation'
 import { useAuth } from '@/app/context/AuthContext'
 import { useSearchParams } from 'next/navigation'
+import imageCompression from 'browser-image-compression';
+
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -53,25 +55,43 @@ export default function ModifierRecette() {
     fetchRecipe()
   }, [id])
 
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setLoading(true)
-    const fileExt = file.name.split('.').pop()
-    const fileName = `${Date.now()}.${fileExt}`
-    const { error: uploadError } = await supabase.storage
-      .from('photos-recettes')
-      .upload(fileName, file)
-
-    if (uploadError) {
-      alert("Erreur upload: " + uploadError.message)
-      setLoading(false)
-      return
+   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+  
+    setLoading(true);
+  
+    try {
+      // OPTIONS DE COMPRESSION
+      const options = {
+        maxSizeMB: 0.8,          // On descend sous les 1 Mo
+        maxWidthOrHeight: 1200, // Taille idéale pour mobile
+        useWebWorker: true
+      };
+  
+      console.log(`Poids original : ${file.size / 1024 / 1024} MB`);
+      const compressedFile = await imageCompression(file, options);
+      console.log(`Poids final : ${compressedFile.size / 1024 / 1024} MB`);
+  
+      // UPLOAD DU FICHIER COMPRESSÉ
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('photos-recettes')
+        .upload(fileName, compressedFile); // On envoie le fichier compressé
+  
+      if (uploadError) throw uploadError;
+  
+      const { data } = supabase.storage.from('photos-recettes').getPublicUrl(fileName);
+      setImage(data.publicUrl);
+  
+    } catch (error) {
+      alert("Erreur lors du traitement de l'image");
+    } finally {
+      setLoading(false);
     }
-    const { data } = supabase.storage.from('photos-recettes').getPublicUrl(fileName)
-    setImage(data.publicUrl)
-    setLoading(false)
-  }
+  };
 
   const updateIngredient = (index: number, field: string, value: any) => {
     const newIngs = [...ingredients]
